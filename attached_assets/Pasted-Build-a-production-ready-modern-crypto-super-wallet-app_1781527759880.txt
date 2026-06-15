@@ -1,0 +1,771 @@
+Build a production-ready modern crypto super wallet application called "HOSHI".
+
+The application must combine features inspired by Phantom Wallet, Trust Wallet, Backpack, Rabby, Binance Web3 Wallet, and OKX Wallet.
+
+IMPORTANT:
+This is NOT a simple wallet clone.
+This should feel like a next-generation premium crypto operating system with modern UI/UX, security-first architecture, multi-chain support, and scalable infrastructure.
+
+====================================================
+MAIN GOAL
+====================================================
+
+Create a complete multi-chain non-custodial crypto wallet ecosystem with:
+
+- Mobile-first design
+- Browser extension architecture
+- Dark premium UI
+- Orange accent branding
+- Multi-chain support (50+ chains ready)
+- Swap aggregator
+- NFT support
+- AI recommendation system
+- Affiliate system
+- Market analytics
+- Fiat on-ramp
+- QR payments
+- Security center
+- Hardware wallet support
+- Real-time portfolio tracking
+
+The app must look premium, modern, smooth, elegant, and highly polished like a funded crypto startup product.
+
+====================================================
+
+
+Typography:
+
+- Font: Poppins / Plus Jakarta Sans / Manrope
+- Bold headings (700–800)
+- Clean readable body text
+- Large numeric displays for balances and metrics
+- Strong emphasis on financial data
+
+Use:
+
+- TailwindCSS
+- Framer Motion (subtle only)
+- Card-based layouts
+- Consistent border system
+- Large rounded buttons
+- Dashboard widgets
+- Sidebar navigation
+- Responsive grid system
+- Lucide Icons
+- Lightweight charts
+- Minimalistic data visualization
+
+
+Animation Requirements:
+
+- Fast and subtle interactions (150–250ms)
+- Button hover lift effect
+- Card hover elevation effect
+- Smooth page transitions
+- Number counter animation for balances
+- Progress bar animations
+- Chart loading animation
+- Micro interactions only
+- Avoid flashy Web3 animations
+- Avoid glow effects
+- Avoid floating background effects
+
+
+====================================================
+TECH STACK
+====================================================
+
+Frontend:
+- Next.js 15
+- React
+- TypeScript
+- TailwindCSS
+- Framer Motion
+- Zustand
+- React Query
+- Recharts
+- Shadcn UI
+
+Mobile:
+- React Native ready structure
+
+Blockchain:
+- ethers.js
+- viem
+- @solana/web3.js
+- WalletConnect v2
+- wagmi
+- web3modal
+
+Backend:
+- Node.js
+- Express or Fastify
+- PostgreSQL
+- Redis
+- Prisma ORM
+
+Storage:
+
+- Encrypted local storage
+- Secure key management
+- IPFS support
+
+AUTH:
+
+- Biometric-ready architecture
+- Local encrypted wallet storage
+- Seed phrase encryption
+
+Infrastructure:
+- Docker
+- GitHub Actions
+- Cloudflare
+- Vercel deployment ready
+
+====================================================
+PROJECT STRUCTURE
+====================================================
+
+Create scalable monorepo architecture:
+
+apps/
+   web/
+   mobile/
+   extension/
+
+packages/
+   ui/
+   wallet-core/
+   blockchain/
+   security/
+   sdk/
+
+services/
+   auth/
+   analytics/
+   affiliate/
+   market/
+   swap/
+   notifications/
+   ai-engine/
+
+infra/
+   docker/
+   kubernetes/
+
+====================================================
+CORE WALLET FEATURES
+====================================================
+
+Implement:
+
+MODULE 1 — WALLET ONBOARDING
+
+Features:
+
+Create wallet
+Import wallet
+Generate seed phrase
+Encrypt locally
+Password protection
+Recovery flow
+Biometrics ready
+
+Screens:
+
+Welcome
+Create Wallet
+Import Wallet
+Backup Phrase
+Confirm Phrase
+Security Setup
+
+MODULE 2 — DASHBOARD
+
+Features:
+
+Total balance
+Portfolio value
+Multi-chain assets
+Performance indicators
+Price tracking
+Quick actions
+
+Components:
+
+Portfolio card
+Token list
+Mini charts
+Search
+Filter
+
+MODULE 3 — TOKEN MANAGEMENT
+
+Features:
+
+Token cards
+Search
+Filters
+Chain badges
+Sorting
+Favorites
+Mini sparklines
+
+MODULE 4 — NFT GALLERY
+
+Features:
+
+NFT grid
+Metadata viewer
+IPFS support
+Collection pages
+Search collections
+
+MODULE 5 — SEND / RECEIVE
+
+Features:
+
+QR scanner
+QR generation
+ENS support
+Address validation
+Gas estimation
+Simulation
+
+MODULE 6 — SWAP ENGINE
+
+Integrations:
+
+1inch
+Jupiter
+LiFi
+Paraswap
+
+Features:
+
+Route optimization
+Slippage controls
+Cross-chain swap
+Fee breakdown
+Simulation
+
+MODULE 7 — WALLETCONNECT
+
+Features:
+
+Connect DApps
+Session management
+Permission system
+Connected apps page
+
+MODULE 8 — POLYMARKET
+
+Features:
+
+Market list
+Positions
+Orders
+Market filters
+Prediction trading
+USDC support
+Polygon support
+
+MODULE 9 — MARKET INTELLIGENCE
+
+Features:
+
+Fear & Greed Index
+Trending tokens
+Gainers / losers
+Sector analytics
+Smart money tracker
+Whale alerts
+
+MODULE 10 — AFFILIATE
+
+Features:
+
+Referral system
+Revenue tracking
+Reward dashboard
+Claim system
+Invite tracking
+
+MODULE 11 — TOKEN DISCOVERY
+
+Features:
+
+Search token
+Contract lookup
+Verification badges
+Scam detection
+Honeypot detection
+Liquidity checks
+
+MODULE 12 — PORTFOLIO ANALYTICS
+
+Features:
+
+Wealth charts
+PnL tracking
+Allocation breakdown
+ROI analytics
+Risk score
+Diversification score
+
+MULTI-CHAIN SUPPORT:
+
+Ethereum
+Solana
+Bitcoin
+Base
+Polygon
+Arbitrum
+Optimism
+BNB Chain
+
+UI REQUIREMENTS:
+
+Mobile-first
+Premium dark theme
+Orange accents
+Glassmorphism cards
+Rounded corners
+Smooth animations
+Reusable components
+Clean typography
+
+ARCHITECTURE REQUIREMENTS:
+
+Create:
+
+/app
+/components
+/features
+/hooks
+/services
+/store
+/types
+/lib
+/api
+/contracts
+/utils
+
+Generate:
+
+Reusable components
+Type definitions
+API layer
+State management
+Folder structure
+Routing
+Database schema
+Environment setup
+Example data
+Error handling
+Loading states
+Empty states
+
+13. SETTINGS / ACCOUNT MANAGEMENT SCREEN
+
+Prompt:
+
+Design a premium settings screen for a Web3 Super Wallet mobile app with dark mode UI, black background, and orange accent colors. Modern fintech design inside realistic iPhone frame.
+
+Header section:
+
+Back button
+Title: Settings
+Search settings shortcut
+
+Profile section includes:
+
+Profile photo upload
+Change avatar
+Wallet name editor
+Wallet address preview
+Copy wallet address button
+Multi-wallet selector
+
+Wallet Management section:
+
+Wallet name management
+Active wallet selection
+Create additional wallets
+Import wallet
+Export wallet
+Wallet backup status
+
+Security section:
+
+View seed phrase
+Export private key
+Password management
+Biometrics toggle
+Face ID support
+Fingerprint support
+Auto-lock timer
+Transaction confirmation settings
+Anti-phishing mode
+Scam protection toggle
+
+Privacy section:
+
+Hide balances
+Privacy mode
+Wallet visibility controls
+Analytics sharing controls
+
+Affiliate section:
+
+Affiliate dashboard shortcut
+Referral code
+Commission earnings
+
+Network section:
+
+Manage RPCs
+Add custom network
+Network priority
+Gas preferences
+Preferred swap routing
+
+Notification settings:
+
+Price alerts
+Transaction alerts
+Security alerts
+Market alerts
+
+App settings:
+
+Theme switcher
+Language selector
+Currency selector
+App version
+Cache management
+
+Support section:
+
+Help center
+Contact support
+FAQ
+Report bug
+
+Danger zone section:
+
+Remove wallet
+Reset app
+Delete local data
+Logout
+
+1. Create Wallet
+- Generate seed phrase
+- Import existing wallet
+- Secure local encryption
+- Biometric ready
+
+2. Wallet Dashboard
+- Total balance
+- Portfolio chart
+- Multi-chain balances
+- Live token prices
+- Performance tracking
+
+3. Token List
+- Modern token cards
+- Chain badge
+- Price changes
+- Mini sparkline charts
+- Search and filter
+
+4. NFT Gallery
+- NFT grid view
+- Collection details
+- Metadata support
+- IPFS support
+
+5. Send / Receive
+- QR code support
+- Address validation
+- ENS support
+- Gas estimation
+
+6. Swap System
+Integrate:
+- 1inch
+- Jupiter
+- LiFi
+- Paraswap
+
+Features:
+- Route optimization
+- Slippage settings
+- Cross-chain swap
+- Transaction simulation
+
+7. WalletConnect
+- DApp connection
+- Session management
+- Connected apps page
+
+====================================================
+MULTI-CHAIN SUPPORT
+====================================================
+
+Architecture must support:
+
+EVM:
+- Ethereum
+- Base
+- Arbitrum
+- Optimism
+- Polygon
+- BNB Chain
+- Avalanche
+
+Solana:
+- SOL support
+- SPL tokens
+
+Bitcoin:
+- BTC wallet support
+
+Future-ready structure for:
+- Cosmos
+- Sui
+- Aptos
+- Tron
+
+Create abstraction layer:
+
+/chains
+   /ethereum
+   /solana
+   /bitcoin
+   /cosmos
+
+====================================================
+MARKET SECTION
+====================================================
+
+Create full market analytics section with:
+
+- Trending tokens
+- Top gainers
+- Top losers
+- AI token recommendations
+- Fear & greed index
+- Market sentiment
+- Whale tracking
+- Token detail page
+- Live charts
+- News aggregator
+
+Integrate APIs:
+- CoinGecko
+- DexScreener
+- Birdeye
+- Moralis
+
+====================================================
+AI FEATURES
+====================================================
+
+Build AI assistant module:
+
+Features:
+- Portfolio analysis
+- Risk scoring
+- AI token recommendation
+- Smart alerts
+- Whale tracking
+- Scam detection
+
+Example:
+"Your portfolio risk increased 12% today."
+
+====================================================
+AFFILIATE SYSTEM
+====================================================
+
+Build complete affiliate system:
+
+- Referral code
+- Invite tracking
+- Commission tracking
+- Leaderboard
+- Reward system
+- Referral analytics
+
+====================================================
+SECURITY CENTER
+====================================================
+
+This is EXTREMELY IMPORTANT.
+
+Implement:
+- Local encrypted wallet storage
+- AES-256 encryption
+- Transaction simulation
+- Scam token detection
+- Malicious contract warning
+- Anti-phishing
+- Security score
+- Device management
+
+Integrate:
+- GoPlus Security
+- Blockaid
+
+====================================================
+SETTINGS PAGE
+====================================================
+
+Modern premium settings UI with:
+
+- Profile photo
+- Wallet name
+- Seed phrase access
+- Export private key
+- Affiliate program
+- Connected devices
+- Notification settings
+- Security center
+- Recovery center
+- Theme settings
+
+====================================================
+BUY / SELL WITH FIAT
+====================================================
+
+Prepare integration structure for:
+- MoonPay
+- Transak
+- Ramp
+
+Features:
+- KYC ready
+- AML support
+- Fiat purchase flow
+
+====================================================
+QR PAYMENT SYSTEM
+====================================================
+
+Implement:
+- Wallet QR
+- Payment QR
+- Merchant QR
+- Scan to pay
+
+====================================================
+HARDWARE WALLET SUPPORT
+====================================================
+
+Prepare architecture for:
+- Ledger
+- Trezor
+- Keystone
+
+====================================================
+HOME SCREEN UI
+====================================================
+
+Build homepage exactly like a premium crypto wallet.
+
+Top section:
+- Active wallet
+- Notification icon
+- Settings icon
+
+Wallet card:
+- Total balance
+- Animated background
+- Portfolio percentage
+- NFT or mascot image
+- Blur effect
+
+Tabs:
+- My Coins
+- NFTs
+
+Token cards:
+- Token icon
+- Chain badge
+- Price
+- Percentage
+- Balance
+- Modern card design
+
+Bottom navigation:
+- Send
+- Receive
+- Swap
+- Buy
+- Sell
+
+====================================================
+UX REQUIREMENTS
+====================================================
+
+The app must feel:
+- Smooth
+- Fast
+- Premium
+- Professional
+- Safe
+- Modern
+
+Avoid:
+- Generic dashboard look
+- Overcrowded UI
+- Cheap gradients
+- Old Web2 styling
+
+====================================================
+OUTPUT REQUIREMENTS
+====================================================
+
+Generate:
+
+1. Full frontend structure
+2. Reusable component system
+3. Wallet core architecture
+4. Blockchain abstraction layer
+5. Backend API structure
+6. Database schema
+7. Security architecture
+8. Complete responsive UI
+9. Dark premium design system
+10. Production-ready codebase
+11. Environment setup
+12. API integration examples
+13. Mock data
+14. Demo charts
+15. Realistic crypto UI
+
+====================================================
+BONUS FEATURES
+====================================================
+
+If possible also implement:
+- Push notifications
+- Portfolio analytics
+- Watchlist
+- Social wallet
+- Copy trading architecture
+- Gasless transaction preparation
+- AI assistant chatbot
+- Smart money tracker
+
+====================================================
+FINAL RESULT
+====================================================
+
+The final app should feel like:
+- Phantom Wallet meets OKX Wallet meets Backpack
+- A real venture-funded crypto startup product
+- Production-quality UI/UX
+- Modern web3 operating system
+- Premium multi-chain crypto super wallet

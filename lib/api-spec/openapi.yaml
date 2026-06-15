@@ -1,22 +1,27 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: HOSHI Wallet API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: wallets
+  - name: tokens
+  - name: transactions
+  - name: market
+  - name: nfts
+  - name: affiliate
+  - name: settings
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,431 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Wallets ──────────────────────────────────────────────────────────────────
+  /wallets:
+    get:
+      operationId: listWallets
+      tags: [wallets]
+      summary: List all wallets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Wallet"
+    post:
+      operationId: createWallet
+      tags: [wallets]
+      summary: Create a new wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallets/active:
+    get:
+      operationId: getActiveWallet
+      tags: [wallets]
+      summary: Get currently active wallet
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallets/{id}:
+    get:
+      operationId: getWallet
+      tags: [wallets]
+      summary: Get a wallet by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+    patch:
+      operationId: updateWallet
+      tags: [wallets]
+      summary: Update wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+    delete:
+      operationId: deleteWallet
+      tags: [wallets]
+      summary: Delete wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /wallets/{id}/activate:
+    post:
+      operationId: activateWallet
+      tags: [wallets]
+      summary: Set wallet as active
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallets/{id}/portfolio:
+    get:
+      operationId: getPortfolio
+      tags: [wallets]
+      summary: Get portfolio summary with 7-day chart data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioSummary"
+
+  # ── Tokens ───────────────────────────────────────────────────────────────────
+  /tokens/{walletId}:
+    get:
+      operationId: listTokens
+      tags: [tokens]
+      summary: List tokens for a wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Token"
+
+  /tokens/discover/all:
+    get:
+      operationId: discoverTokens
+      tags: [tokens]
+      summary: Discover available tokens to add
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TokenInfo"
+
+  /tokens/{id}/toggle:
+    post:
+      operationId: toggleToken
+      tags: [tokens]
+      summary: Enable or disable a token
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+
+  # ── Transactions ─────────────────────────────────────────────────────────────
+  /transactions/{walletId}:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transaction history for a wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /transactions:
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Record a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /transactions/recent/all:
+    get:
+      operationId: getRecentActivity
+      tags: [transactions]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  # ── Market ───────────────────────────────────────────────────────────────────
+  /market/overview:
+    get:
+      operationId: getMarketOverview
+      tags: [market]
+      summary: Global market overview
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketOverview"
+
+  /market/trending:
+    get:
+      operationId: getTrendingTokens
+      tags: [market]
+      summary: Trending tokens
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketToken"
+
+  /market/gainers:
+    get:
+      operationId: getTopGainers
+      tags: [market]
+      summary: Top gaining tokens (24h)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketToken"
+
+  /market/losers:
+    get:
+      operationId: getTopLosers
+      tags: [market]
+      summary: Top losing tokens (24h)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketToken"
+
+  /market/news:
+    get:
+      operationId: getMarketNews
+      tags: [market]
+      summary: Crypto news articles
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NewsArticle"
+
+  # ── NFTs ─────────────────────────────────────────────────────────────────────
+  /nfts/{walletId}:
+    get:
+      operationId: listNfts
+      tags: [nfts]
+      summary: List NFTs for a wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Nft"
+
+  /nfts/detail/{id}:
+    get:
+      operationId: getNft
+      tags: [nfts]
+      summary: Get NFT details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Nft"
+
+  # ── Affiliate ────────────────────────────────────────────────────────────────
+  /affiliate:
+    get:
+      operationId: getAffiliateStats
+      tags: [affiliate]
+      summary: Get affiliate stats and referral code
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AffiliateStats"
+
+  /affiliate/claim:
+    post:
+      operationId: claimAffiliateRewards
+      tags: [affiliate]
+      summary: Claim affiliate rewards
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AffiliateStats"
+
+  # ── Settings ─────────────────────────────────────────────────────────────────
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get user settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update user settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +461,349 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Wallet:
+      type: object
+      required: [id, name, address, chain, isActive, totalBalanceUsd, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        chain:
+          type: string
+        isActive:
+          type: boolean
+        totalBalanceUsd:
+          type: number
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    WalletInput:
+      type: object
+      required: [name, address, chain]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        chain:
+          type: string
+
+    WalletUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+
+    PortfolioSummary:
+      type: object
+      required: [totalBalanceUsd, gainUsd, gainPct, activeAssets, diversificationPct, chartData, gainsByPeriod]
+      properties:
+        totalBalanceUsd:
+          type: number
+        gainUsd:
+          type: number
+        gainPct:
+          type: number
+        activeAssets:
+          type: integer
+        diversificationPct:
+          type: number
+        lastUpdated:
+          type: string
+        chartData:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartPoint"
+        gainsByPeriod:
+          type: array
+          items:
+            $ref: "#/components/schemas/PeriodGain"
+
+    ChartPoint:
+      type: object
+      required: [label, value]
+      properties:
+        label:
+          type: string
+        value:
+          type: number
+
+    PeriodGain:
+      type: object
+      required: [period, gainUsd, gainPct]
+      properties:
+        period:
+          type: string
+        gainUsd:
+          type: number
+        gainPct:
+          type: number
+
+    Token:
+      type: object
+      required: [id, symbol, name, chain, balance, balanceUsd, priceUsd, change24h, isEnabled]
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        chain:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        balance:
+          type: number
+        balanceUsd:
+          type: number
+        priceUsd:
+          type: number
+        change24h:
+          type: number
+        isFavorite:
+          type: boolean
+        isEnabled:
+          type: boolean
+        contractAddress:
+          type: ["string", "null"]
+
+    TokenInfo:
+      type: object
+      required: [symbol, name, chain, priceUsd, rank]
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        chain:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        priceUsd:
+          type: number
+        rank:
+          type: integer
+        contractAddress:
+          type: ["string", "null"]
+
+    Transaction:
+      type: object
+      required: [id, type, tokenSymbol, amount, amountUsd, chain, status, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [send, receive, swap, buy, sell]
+        tokenSymbol:
+          type: string
+        tokenLogoUrl:
+          type: ["string", "null"]
+        amount:
+          type: number
+        amountUsd:
+          type: number
+        chain:
+          type: string
+        fromAddress:
+          type: ["string", "null"]
+        toAddress:
+          type: ["string", "null"]
+        txHash:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, confirmed, failed]
+        gasUsd:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+
+    TransactionInput:
+      type: object
+      required: [type, tokenSymbol, amount, amountUsd, chain]
+      properties:
+        type:
+          type: string
+          enum: [send, receive, swap, buy, sell]
+        tokenSymbol:
+          type: string
+        amount:
+          type: number
+        amountUsd:
+          type: number
+        chain:
+          type: string
+        fromAddress:
+          type: ["string", "null"]
+        toAddress:
+          type: ["string", "null"]
+        txHash:
+          type: ["string", "null"]
+        gasUsd:
+          type: ["number", "null"]
+
+    MarketOverview:
+      type: object
+      required: [totalMarketCapUsd, btcDominancePct, ethDominancePct, volume24hUsd, change24hPct, fearGreedIndex, fearGreedLabel]
+      properties:
+        totalMarketCapUsd:
+          type: number
+        btcDominancePct:
+          type: number
+        ethDominancePct:
+          type: number
+        volume24hUsd:
+          type: number
+        change24hPct:
+          type: number
+        fearGreedIndex:
+          type: integer
+        fearGreedLabel:
+          type: string
+
+    MarketToken:
+      type: object
+      required: [symbol, name, chain, priceUsd, change24h, volume24hUsd, rank]
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        chain:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        priceUsd:
+          type: number
+        change24h:
+          type: number
+        volume24hUsd:
+          type: number
+        rank:
+          type: integer
+        contractAddress:
+          type: ["string", "null"]
+
+    NewsArticle:
+      type: object
+      required: [id, title, source, publishedAt, sentiment, url]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        source:
+          type: string
+        publishedAt:
+          type: string
+        sentiment:
+          type: string
+          enum: [bullish, bearish, neutral]
+        imageUrl:
+          type: ["string", "null"]
+        url:
+          type: string
+        summary:
+          type: ["string", "null"]
+
+    Nft:
+      type: object
+      required: [id, name, collection, chain, tokenId]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        collection:
+          type: string
+        chain:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        tokenId:
+          type: string
+        contractAddress:
+          type: ["string", "null"]
+        floorPriceUsd:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+
+    AffiliateStats:
+      type: object
+      required: [referralCode, referralLink, totalReferrals, volumeSwapUsd, commissionUsd, tokensEarned, tokensClaimed]
+      properties:
+        referralCode:
+          type: string
+        referralLink:
+          type: string
+        totalReferrals:
+          type: integer
+        volumeSwapUsd:
+          type: number
+        commissionUsd:
+          type: number
+        tokensEarned:
+          type: number
+        tokensClaimed:
+          type: number
+
+    Settings:
+      type: object
+      required: [id, currency, language, theme, hideBalances, biometricsEnabled, autoLockMinutes, notifyPriceAlerts, notifyTransactions, notifySecurity]
+      properties:
+        id:
+          type: integer
+        currency:
+          type: string
+        language:
+          type: string
+        theme:
+          type: string
+          enum: [dark, light, system]
+        hideBalances:
+          type: boolean
+        biometricsEnabled:
+          type: boolean
+        autoLockMinutes:
+          type: integer
+        notifyPriceAlerts:
+          type: boolean
+        notifyTransactions:
+          type: boolean
+        notifySecurity:
+          type: boolean
+
+    SettingsUpdate:
+      type: object
+      properties:
+        currency:
+          type: string
+        language:
+          type: string
+        theme:
+          type: string
+          enum: [dark, light, system]
+        hideBalances:
+          type: boolean
+        biometricsEnabled:
+          type: boolean
+        autoLockMinutes:
+          type: integer
+        notifyPriceAlerts:
+          type: boolean
+        notifyTransactions:
+          type: boolean
+        notifySecurity:
+          type: boolean
