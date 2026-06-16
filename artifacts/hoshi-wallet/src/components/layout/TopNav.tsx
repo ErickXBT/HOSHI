@@ -259,27 +259,20 @@ export function TopNav() {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 mt-6 border-b border-border">
-          <Link href="/dashboard">
-            <div className={`pb-3 border-b-2 font-medium text-sm transition-colors ${location === "/dashboard" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              Coins
-            </div>
-          </Link>
-          <Link href="/market">
-            <div className={`pb-3 border-b-2 font-medium text-sm transition-colors ${location === "/market" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              Market
-            </div>
-          </Link>
-          <Link href="/nfts">
-            <div className={`pb-3 border-b-2 font-medium text-sm transition-colors ${location === "/nfts" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              NFTs
-            </div>
-          </Link>
-          <Link href="/news">
-            <div className={`pb-3 border-b-2 font-medium text-sm transition-colors ${location === "/news" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              News
-            </div>
-          </Link>
+        <div className="flex items-center gap-5 mt-6 border-b border-border overflow-x-auto scrollbar-hide">
+          {[
+            { href: "/dashboard", label: "Coins" },
+            { href: "/market",    label: "Market" },
+            { href: "/nfts",      label: "NFTs" },
+            { href: "/news",      label: "News" },
+            { href: "/polymarket", label: "Polymarket" },
+          ].map(({ href, label }) => (
+            <Link key={href} href={href}>
+              <div className={`pb-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${location === href ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                {label}
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
 

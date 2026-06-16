@@ -12,6 +12,7 @@ import { executeJupiterSwap } from "@/lib/solana-tx";
 import { useTrending } from "@/hooks/useTrending";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { lookupTokenByCA } from "@/hooks/useTokens";
 
 const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -105,19 +106,22 @@ function TokenPickerModal({
     setCAError("");
     setCAToken(null);
     try {
-      const res = await fetch(`https://api.jup.ag/tokens/v1/token/${mint}`);
-      if (!res.ok) throw new Error("Not found");
-      const data = await res.json();
+      const result = await lookupTokenByCA(mint);
+      if (!result) throw new Error("Not found");
       const token: SwapToken = {
-        symbol: data.symbol ?? "UNKNOWN",
-        name: data.name ?? mint.slice(0, 8),
+        symbol: result.symbol,
+        name: result.name,
         mint,
-        decimals: data.decimals ?? 6,
-        logo: data.logoURI ?? "",
+        decimals: result.chain === "solana" ? 6 : 18,
+        logo: result.logo ?? "",
+        cgId: undefined,
       };
+      (token as SwapToken & { chain?: string; price?: number; change24h?: number }).chain = result.chain;
+      (token as SwapToken & { price?: number }).price = result.price;
+      (token as SwapToken & { change24h?: number }).change24h = result.change24h;
       setCAToken(token);
     } catch {
-      setCAError("Token not found. Make sure it's a valid Solana mint address.");
+      setCAError("Token not found. Make sure it's a valid contract address (ETH/BSC/SOL/Base/Polygon supported).");
     }
     setCALoading(false);
   };
@@ -157,10 +161,11 @@ function TokenPickerModal({
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Link2 className="w-3.5 h-3.5" />
             <span className="font-semibold">Search by Contract Address (CA)</span>
+            <span className="ml-auto text-[10px] opacity-60">SOL / ETH / BSC / Base / Polygon</span>
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="Paste Solana mint address..."
+              placeholder="Paste contract address or mint address..."
               value={ca}
               onChange={e => { setCA(e.target.value); setCAToken(null); setCAError(""); }}
               onKeyDown={e => e.key === "Enter" && lookupCA()}
@@ -176,20 +181,42 @@ function TokenPickerModal({
             </Button>
           </div>
           {caError && <p className="text-xs text-destructive">{caError}</p>}
-          {caToken && (
-            <button
-              onClick={selectCAToken}
-              className="w-full flex items-center gap-3 p-3 bg-primary/10 border border-primary/30 rounded-xl hover:bg-primary/20 transition-colors"
-            >
-              <TokenLogo logo={caToken.logo} symbol={caToken.symbol} size={8} />
-              <div className="text-left">
-                <div className="font-bold text-sm">{caToken.symbol}</div>
-                <div className="text-xs text-muted-foreground">{caToken.name}</div>
-                <div className="font-mono text-[9px] text-muted-foreground/60 mt-0.5">{caToken.mint.slice(0, 16)}...</div>
-              </div>
-              <div className="ml-auto text-xs text-primary font-bold">Select →</div>
-            </button>
-          )}
+          {caToken && (() => {
+            const ext = caToken as SwapToken & { chain?: string; price?: number; change24h?: number };
+            const chainMap: Record<string, string> = { solana: "SOL", ethereum: "ETH", bsc: "BNB", polygon: "MATIC", base: "BASE", arbitrum: "ARB" };
+            const chainLabel = ext.chain ? (chainMap[ext.chain] ?? ext.chain.toUpperCase().slice(0, 4)) : "";
+            return (
+              <button
+                onClick={selectCAToken}
+                className="w-full flex items-center gap-3 p-3 bg-primary/10 border border-primary/30 rounded-xl hover:bg-primary/20 transition-colors"
+              >
+                <TokenLogo logo={caToken.logo} symbol={caToken.symbol} size={9} />
+                <div className="text-left flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm">{caToken.symbol}</span>
+                    {chainLabel && (
+                      <span className="text-[9px] px-1.5 py-0.5 bg-card border border-border rounded font-bold uppercase">{chainLabel}</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{caToken.name}</div>
+                  {ext.price != null && ext.price > 0 && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs font-medium">
+                        ${ext.price < 0.0001 ? ext.price.toExponential(2) : ext.price.toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                      </span>
+                      {ext.change24h != null && (
+                        <span className={`text-[10px] font-semibold ${ext.change24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                          {ext.change24h >= 0 ? "+" : ""}{ext.change24h.toFixed(2)}%
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="font-mono text-[9px] text-muted-foreground/50 mt-0.5 truncate">{caToken.mint}</div>
+                </div>
+                <div className="shrink-0 text-xs text-primary font-bold">Select →</div>
+              </button>
+            );
+          })()}
         </div>
       </div>
 
