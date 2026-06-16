@@ -106,10 +106,15 @@ async function deleteWalletFromDb(deviceId: string, walletId: string): Promise<v
 let _addWalletCallback: (() => void) | null = null;
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [wallets, setWallets] = useState<WalletEntry[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [wallets, setWallets] = useState<WalletEntry[]>(loadLocalWallets);
+  const [activeId, setActiveId] = useState<string | null>(() => {
+    const saved = localStorage.getItem(ACTIVE_KEY);
+    const local = loadLocalWallets();
+    if (saved && local.find(w => w.id === saved)) return saved;
+    return local[0]?.id ?? null;
+  });
   const [unlockedMnemonic, setUnlockedMnemonic] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [deviceId] = useState(getOrCreateDeviceId);
 
   useEffect(() => {

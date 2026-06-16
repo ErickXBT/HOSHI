@@ -13,13 +13,43 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsDesktop } from "@/hooks/use-mobile";
 
 const CHAINS = [
-  { symbol: "ETH", name: "Ethereum", color: "#627EEA", rpc: "https://eth.llamarpc.com", type: "evm" },
-  { symbol: "SOL", name: "Solana", color: "#14F195", rpc: "", type: "sol" },
-  { symbol: "BNB", name: "BNB Chain", color: "#F3BA2F", rpc: "https://bsc-dataseed1.binance.org", type: "evm" },
-  { symbol: "MATIC", name: "Polygon", color: "#8247E5", rpc: "https://polygon-rpc.com", type: "evm" },
-  { symbol: "ARB", name: "Arbitrum", color: "#12AAFF", rpc: "https://arb1.arbitrum.io/rpc", type: "evm" },
-  { symbol: "BASE", name: "Base", color: "#0052FF", rpc: "https://mainnet.base.org", type: "evm" },
+  {
+    symbol: "ETH", name: "Ethereum", rpc: "https://eth.llamarpc.com", type: "evm" as const,
+    logo: "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+  },
+  {
+    symbol: "SOL", name: "Solana", rpc: "", type: "sol" as const,
+    logo: "https://assets.coingecko.com/coins/images/4128/small/solana.png",
+  },
+  {
+    symbol: "BNB", name: "BNB Chain", rpc: "https://bsc-dataseed1.binance.org", type: "evm" as const,
+    logo: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+  },
+  {
+    symbol: "MATIC", name: "Polygon", rpc: "https://polygon-rpc.com", type: "evm" as const,
+    logo: "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
+  },
+  {
+    symbol: "ARB", name: "Arbitrum", rpc: "https://arb1.arbitrum.io/rpc", type: "evm" as const,
+    logo: "https://assets.coingecko.com/coins/images/16547/small/arb.jpg",
+  },
+  {
+    symbol: "BASE", name: "Base", rpc: "https://mainnet.base.org", type: "evm" as const,
+    logo: "https://raw.githubusercontent.com/base-org/brand-kit/main/logo/symbol/Base_Symbol_Blue.png",
+  },
 ];
+
+function ChainLogo({ logo, symbol }: { logo: string; symbol: string }) {
+  const [err, setErr] = useState(false);
+  if (!logo || err) {
+    return (
+      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+        {symbol.slice(0, 2)}
+      </div>
+    );
+  }
+  return <img src={logo} alt={symbol} className="w-7 h-7 rounded-full object-contain shrink-0" onError={() => setErr(true)} />;
+}
 
 export default function Send() {
   const [address, setAddress] = useState("");
@@ -35,7 +65,7 @@ export default function Send() {
   const isDesktop = useIsDesktop();
 
   const priceMap: Record<string, number> = {};
-  if (prices) for (const p of prices) priceMap[p.symbol.toUpperCase()] = p.current_price;
+  if (prices) for (const p of prices) priceMap[p.symbol.toUpperCase()] = p.current_price ?? 0;
   const coinPrice = priceMap[selectedChain.symbol] ?? 0;
 
   const isValidAddr = address
@@ -44,6 +74,7 @@ export default function Send() {
 
   useEffect(() => {
     if (!activeWallet) return;
+    setBalance("0");
     if (selectedChain.type === "evm") {
       getEvmBalance(activeWallet.evmAddress, selectedChain.rpc).then(b => setBalance(b));
     } else if (selectedChain.type === "sol" && activeWallet.solAddress) {
@@ -53,8 +84,7 @@ export default function Send() {
 
   useEffect(() => {
     if (!isValidAddr || !amount || parseFloat(amount) <= 0 || selectedChain.type !== "evm" || !activeWallet?.evmAddress) {
-      setGasFee(null);
-      return;
+      setGasFee(null); return;
     }
     const timer = setTimeout(async () => {
       const fee = await estimateGasFee(activeWallet.evmAddress, address, amount, selectedChain.rpc);
@@ -69,64 +99,30 @@ export default function Send() {
       toast({ title: "Wallet Locked", description: "Please unlock your wallet first.", variant: "destructive" });
       return;
     }
-
     setSending(true);
     try {
       if (selectedChain.type === "sol") {
         const keypair = await getSolKeypair();
-        if (!keypair) throw new Error("Could not derive Solana keypair — please re-enter your password");
-
+        if (!keypair) throw new Error("Could not derive Solana keypair");
         const lamports = BigInt(Math.round(parseFloat(amount) * 1e9));
         const sig = await sendSol(keypair.pubKey, address, lamports, keypair.privKey);
-
         toast({
           title: "SOL Sent ✅",
-          description: (
-            <span>
-              TX:{" "}
-              <a
-                href={`https://solscan.io/tx/${sig}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline text-primary"
-              >
-                {sig.slice(0, 8)}...{sig.slice(-6)}
-              </a>
-            </span>
-          ) as unknown as string,
+          description: `TX: ${sig.slice(0, 8)}...${sig.slice(-6)} — View on Solscan`,
         });
       } else {
         const signer = getEvmSigner(selectedChain.rpc);
         if (!signer) throw new Error("Wallet locked — please reconnect");
-
-        const tx = await signer.sendTransaction({
-          to: address,
-          value: ethers.parseEther(amount),
-        });
-
+        const tx = await signer.sendTransaction({ to: address, value: ethers.parseEther(amount) });
         toast({
           title: `${selectedChain.symbol} Sent ✅`,
-          description: (
-            <span>
-              TX:{" "}
-              <a
-                href={`https://etherscan.io/tx/${tx.hash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline text-primary"
-              >
-                {tx.hash.slice(0, 8)}...{tx.hash.slice(-6)}
-              </a>
-            </span>
-          ) as unknown as string,
+          description: `TX: ${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}`,
         });
       }
-
       setAddress("");
       setAmount("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Transaction failed.";
-      toast({ title: "Send Failed ❌", description: msg, variant: "destructive" });
+      toast({ title: "Send Failed ❌", description: (err as Error).message ?? "Transaction failed.", variant: "destructive" });
     } finally {
       setSending(false);
     }
@@ -145,6 +141,7 @@ export default function Send() {
       </div>
 
       <div className={`flex-1 overflow-y-auto p-4 ${isDesktop ? "pb-8 max-w-lg" : "pb-24"} space-y-4`}>
+
         {/* Chain Selector */}
         <div>
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Network</label>
@@ -152,24 +149,30 @@ export default function Send() {
             onClick={() => setShowChainPicker(!showChainPicker)}
             className="w-full flex items-center justify-between p-3 bg-card border border-border rounded-2xl hover:border-primary/50 transition-colors"
           >
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full" style={{ backgroundColor: selectedChain.color + "40" }} />
-              <span className="font-semibold text-sm">{selectedChain.name}</span>
-              <span className="text-xs text-muted-foreground">{selectedChain.symbol}</span>
+            <div className="flex items-center gap-3">
+              <ChainLogo logo={selectedChain.logo} symbol={selectedChain.symbol} />
+              <div className="text-left">
+                <p className="font-semibold text-sm">{selectedChain.name}</p>
+                <p className="text-[10px] text-muted-foreground">{selectedChain.type === "evm" ? "EVM Compatible" : "Solana"}</p>
+              </div>
+              <span className="text-xs text-muted-foreground bg-black/30 px-2 py-0.5 rounded-full border border-border">{selectedChain.symbol}</span>
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </button>
           {showChainPicker && (
-            <div className="mt-1 bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
+            <div className="mt-1 bg-card border border-border rounded-2xl overflow-hidden shadow-xl z-20 relative">
               {CHAINS.map(chain => (
                 <button
                   key={chain.symbol}
                   onClick={() => { setSelectedChain(chain); setShowChainPicker(false); setGasFee(null); }}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-black/20 transition-colors border-b border-border/50 last:border-0"
+                  className={`w-full flex items-center gap-3 p-3 hover:bg-black/20 transition-colors border-b border-border/50 last:border-0 ${chain.symbol === selectedChain.symbol ? "bg-primary/10" : ""}`}
                 >
-                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: chain.color + "40" }} />
-                  <span className="font-medium text-sm">{chain.name}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">{chain.symbol}</span>
+                  <ChainLogo logo={chain.logo} symbol={chain.symbol} />
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-sm">{chain.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{chain.type === "evm" ? "EVM" : "Solana"}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{chain.symbol}</span>
                 </button>
               ))}
             </div>
@@ -191,12 +194,16 @@ export default function Send() {
             </button>
           </div>
           {address && !isValidAddr && <p className="text-xs text-red-500 mt-1">Invalid {selectedChain.name} address</p>}
+          {address && isValidAddr && <p className="text-xs text-green-500 mt-1">✓ Valid address</p>}
         </div>
 
         {/* Amount */}
         <div className="bg-card rounded-3xl p-5 border border-border relative">
           <div className="flex justify-between mb-4">
-            <span className="text-sm font-medium text-muted-foreground">Amount</span>
+            <div className="flex items-center gap-2">
+              <ChainLogo logo={selectedChain.logo} symbol={selectedChain.symbol} />
+              <span className="text-sm font-medium">{selectedChain.symbol}</span>
+            </div>
             <span className="text-xs text-muted-foreground">Balance: {parseFloat(balance).toFixed(6)} {selectedChain.symbol}</span>
           </div>
           <Input
@@ -206,7 +213,9 @@ export default function Send() {
             onChange={e => setAmount(e.target.value)}
             className="text-4xl font-bold border-none bg-transparent p-0 h-auto shadow-none focus-visible:ring-0 w-full mb-2"
           />
-          <div className="text-sm text-muted-foreground mb-4">≈ ${(parseFloat(amount || "0") * coinPrice).toFixed(2)} USD</div>
+          <div className="text-sm text-muted-foreground mb-4">
+            ≈ ${(parseFloat(amount || "0") * coinPrice).toFixed(2)} USD
+          </div>
           <div className="flex justify-between items-center text-xs pt-3 border-t border-border/50">
             <span className="text-muted-foreground">Available: {parseFloat(balance).toFixed(6)} {selectedChain.symbol}</span>
             <Button variant="ghost" className="h-6 px-3 text-[10px] font-bold text-primary border-primary/20 hover:bg-primary/10"
@@ -220,7 +229,10 @@ export default function Send() {
         <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Network</span>
-            <span className="font-medium">{selectedChain.name}</span>
+            <div className="flex items-center gap-1.5">
+              <ChainLogo logo={selectedChain.logo} symbol={selectedChain.symbol} />
+              <span className="font-medium">{selectedChain.name}</span>
+            </div>
           </div>
           {selectedChain.type === "evm" ? (
             <>
@@ -256,9 +268,7 @@ export default function Send() {
           {!sending && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
         </Button>
 
-        {isLocked && (
-          <p className="text-center text-xs text-amber-500">⚠️ Wallet is locked — unlock it from the login screen to send</p>
-        )}
+        {isLocked && <p className="text-center text-xs text-amber-500">⚠️ Wallet is locked — unlock it from the login screen to send</p>}
       </div>
 
       <BottomNav />
