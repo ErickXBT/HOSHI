@@ -3,6 +3,19 @@ name: HOSHI Wallet architecture decisions
 description: Key decisions for the HOSHI Wallet app — storage keys, breakpoints, layout logic, RPCs
 ---
 
+## Branding
+- App name: **HOSHI Swap** (not Wallet)
+- New logo: `@assets/LOGO_HOSHI_SWAP_1781600746164.png` (black cat, sticker style)
+- Favicon: `public/favicon.png` (copied from attached_assets)
+
+## Database sync
+- DB table: `hoshi_wallets` (added via drizzle push, schema in `lib/db/src/schema/hoshi-wallets.ts`)
+- Device ID: random UUID generated once, stored in `localStorage` under `hoshi_device_id`
+- Wallets fetched from DB on startup by deviceId, merged with localStorage cache
+- All mutations (create/import/delete) sync to DB via `/api/hoshi-wallets`
+- Vite proxy: `/api` → `http://localhost:8080` (added to vite.config.ts server.proxy)
+- Encrypted blob stored in DB — private keys NEVER leave client unencrypted
+
 ## Layout logic (App.tsx)
 - Desktop breakpoint: `1024px` (`useIsDesktop` in `use-mobile.tsx`)
 - On desktop: always render full-width (no 390px container), even for login page

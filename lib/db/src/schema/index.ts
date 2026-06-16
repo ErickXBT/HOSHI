@@ -5,3 +5,4 @@ export * from "./nfts";
 export * from "./affiliate";
 export * from "./settings";
 export * from "./market";
+export * from "./hoshi-wallets";

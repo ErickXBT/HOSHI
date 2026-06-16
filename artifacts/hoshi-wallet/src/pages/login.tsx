@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/contexts/WalletContext";
 import { useIsDesktop } from "@/hooks/use-mobile";
-import mascotLogo from "@assets/LOGO_HOSHI_SWAP_1781528480848.png";
+import mascotLogo from "@assets/LOGO_HOSHI_SWAP_1781600746164.png";
 import { ArrowRight, Wallet, KeyRound, Download, Shield, Zap, Globe, Copy, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 function SeedPhraseBackupDialog({
@@ -248,7 +248,7 @@ export default function Login() {
               <img src={mascotLogo} alt="HOSHI" className="w-20 h-20 object-contain drop-shadow-2xl" />
             </div>
             <h1 className="text-5xl font-bold tracking-widest text-white mb-2">HOSHI</h1>
-            <p className="text-sm text-white/60 tracking-[0.3em] uppercase mb-12">Next-Gen Crypto Super Wallet</p>
+            <p className="text-sm text-white/60 tracking-[0.3em] uppercase mb-12">Next-Gen Crypto Super Swap</p>
 
             <div className="space-y-4 w-full max-w-xs">
               {[
@@ -293,7 +293,7 @@ export default function Login() {
           <img src={mascotLogo} alt="HOSHI" className="w-full h-full object-contain relative z-10 drop-shadow-md" />
         </div>
         <h1 className="text-3xl font-bold tracking-widest text-foreground">HOSHI</h1>
-        <p className="text-xs text-muted-foreground mt-2 tracking-widest uppercase">Next-Gen Crypto Super Wallet</p>
+        <p className="text-xs text-muted-foreground mt-2 tracking-widest uppercase">Next-Gen Crypto Super Swap</p>
       </div>
       <div className="flex-1 w-full z-10 pb-10">
         <LoginForm />

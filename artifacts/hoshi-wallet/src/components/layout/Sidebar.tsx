@@ -4,10 +4,12 @@ import {
   LayoutDashboard, PieChart, RefreshCcw, BarChart3,
   ArrowUpRight, ArrowDownLeft, Image, Plus, Users,
   Star, Settings, Bell, LogOut, ChevronDown, Copy,
+  Check, Trash2, Wallet, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import mascotLogo from "@assets/LOGO_HOSHI_SWAP_1781528480848.png";
+import { useState } from "react";
+import newLogo from "@assets/LOGO_HOSHI_SWAP_1781600746164.png";
 
 interface NavItem {
   href: string;
@@ -62,9 +64,104 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
-export function Sidebar() {
-  const { activeWallet, wallets, setActiveWalletId, lockWallet } = useWallet();
+function WalletDropdown({ onClose }: { onClose: () => void }) {
+  const { wallets, activeWallet, setActiveWalletId, deleteWallet, lockWallet } = useWallet();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const handleSelect = (id: string) => {
+    setActiveWalletId(id);
+    onClose();
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirmDelete === id) {
+      deleteWallet(id);
+      if (wallets.length <= 1) {
+        lockWallet();
+        setLocation("/");
+      }
+      setConfirmDelete(null);
+      onClose();
+    } else {
+      setConfirmDelete(id);
+    }
+  };
+
+  const handleCopy = (address: string) => {
+    navigator.clipboard.writeText(address);
+    toast({ title: "Copied", description: "Address copied" });
+  };
+
+  const shortAddr = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+  return (
+    <div className="absolute left-0 right-0 top-full z-50 mt-2 bg-popover border border-border rounded-2xl shadow-2xl overflow-hidden">
+      <div className="p-2 border-b border-border">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold px-2 py-1">
+          My Wallets
+        </p>
+      </div>
+      <div className="max-h-64 overflow-y-auto">
+        {wallets.map(w => (
+          <div
+            key={w.id}
+            className={cn(
+              "flex items-center gap-2 p-2 mx-1 my-0.5 rounded-xl transition-colors",
+              w.id === activeWallet?.id ? "bg-primary/10 border border-primary/30" : "hover:bg-card"
+            )}
+          >
+            <button className="flex-1 flex items-center gap-2 min-w-0" onClick={() => handleSelect(w.id)}>
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                {w.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex flex-col items-start min-w-0">
+                <span className="font-semibold text-xs truncate max-w-[90px]">{w.name}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{shortAddr(w.evmAddress)}</span>
+              </div>
+              {w.id === activeWallet?.id && <Check className="w-3.5 h-3.5 text-primary ml-auto" />}
+            </button>
+            <button
+              onClick={() => handleCopy(w.evmAddress)}
+              className="p-1 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+            >
+              <Copy className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => handleDelete(w.id)}
+              className={cn(
+                "p-1 rounded-lg transition-colors",
+                confirmDelete === w.id
+                  ? "text-red-500 bg-red-500/20"
+                  : "text-muted-foreground hover:text-red-400"
+              )}
+              title={confirmDelete === w.id ? "Click again to confirm delete" : "Delete wallet"}
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="p-2 border-t border-border">
+        <Link href="/">
+          <button
+            onClick={onClose}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add / Import Wallet
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export function Sidebar() {
+  const { activeWallet, wallets, lockWallet } = useWallet();
+  const { toast } = useToast();
+  const [showWalletDropdown, setShowWalletDropdown] = useState(false);
 
   const handleCopyAddress = () => {
     if (activeWallet?.evmAddress) {
@@ -82,18 +179,21 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-6 border-b border-border">
         <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center overflow-hidden">
-          <img src={mascotLogo} alt="HOSHI" className="w-7 h-7 object-contain" />
+          <img src={newLogo} alt="HOSHI Swap" className="w-7 h-7 object-contain" />
         </div>
         <div>
           <p className="font-bold tracking-widest text-sm text-foreground">HOSHI</p>
-          <p className="text-[9px] text-muted-foreground tracking-widest uppercase">Super Wallet</p>
+          <p className="text-[9px] text-muted-foreground tracking-widest uppercase">Swap</p>
         </div>
       </div>
 
       {/* Wallet Selector */}
-      <div className="px-4 py-4 border-b border-border">
+      <div className="px-4 py-4 border-b border-border relative">
         <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold mb-2">Active Wallet</p>
-        <div className="bg-card rounded-xl p-3 border border-border">
+        <button
+          className="w-full bg-card rounded-xl p-3 border border-border hover:border-primary/40 transition-colors text-left"
+          onClick={() => setShowWalletDropdown(v => !v)}
+        >
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
@@ -103,16 +203,24 @@ export function Sidebar() {
                 {activeWallet?.name ?? "No wallet"}
               </span>
             </div>
-            {wallets.length > 1 && <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", showWalletDropdown && "rotate-180")} />
           </div>
-          <button
-            onClick={handleCopyAddress}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group"
-          >
+          <div className="flex items-center gap-1.5 text-muted-foreground">
             <span className="font-mono text-[11px]">{shortAddr}</span>
-            <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
-        </div>
+          </div>
+          {wallets.length > 1 && (
+            <div className="mt-1">
+              <span className="text-[10px] text-muted-foreground">{wallets.length} wallets</span>
+            </div>
+          )}
+        </button>
+
+        {showWalletDropdown && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowWalletDropdown(false)} />
+            <WalletDropdown onClose={() => setShowWalletDropdown(false)} />
+          </>
+        )}
       </div>
 
       {/* Navigation */}
