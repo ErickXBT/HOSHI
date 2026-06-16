@@ -12,10 +12,10 @@ version = "1.0.0"
 [[services]]
 name = "web"
 paths = [ "/" ]
-localPort = 25867
+localPort = 5173
 
 [services.development]
-run = "pnpm --filter @workspace/hoshi-wallet run dev"
+run = "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/hoshi-wallet run dev"
 
 [services.production]
 build = [ "pnpm", "--filter", "@workspace/hoshi-wallet", "run", "build" ]
@@ -27,5 +27,5 @@ from = "/*"
 to = "/index.html"
 
 [services.env]
-PORT = "25867"
+PORT = "5173"
 BASE_PATH = "/"
