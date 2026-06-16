@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { decryptData } from "@/lib/wallet-crypto";

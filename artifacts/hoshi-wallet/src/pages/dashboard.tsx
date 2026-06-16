@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { TopNav } from "@/components/layout/TopNav";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useCoinPrices, getSolBalance } from "@/hooks/usePrices";
 import { getEvmBalance } from "@/lib/wallet-gen";
 import { Copy, QrCode, ArrowUpRight, ArrowDownLeft, Eye, EyeOff, RefreshCw, Wallet, ChevronRight } from "lucide-react";

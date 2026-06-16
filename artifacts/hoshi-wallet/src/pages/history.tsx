@@ -1,7 +1,7 @@
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ArrowLeft, ArrowUpRight, ArrowDownLeft, RefreshCw, ExternalLink, Clock } from "lucide-react";
 import { Link } from "wouter";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";

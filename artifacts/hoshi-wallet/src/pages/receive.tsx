@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { ArrowLeft, Copy, Share2, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useIsDesktop } from "@/hooks/use-mobile";

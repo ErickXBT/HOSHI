@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import mascotLogo from "@assets/LOGO_HOSHI_SWAP_1781600746164.png";
 import { ArrowRight, Wallet, KeyRound, Download, Shield, Zap, Globe, Copy, CheckCircle2, Eye, EyeOff } from "lucide-react";

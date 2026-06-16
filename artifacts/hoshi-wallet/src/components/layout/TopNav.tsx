@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { ChevronDown, Star, Bell, Settings as SettingsIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 
 export function TopNav() {

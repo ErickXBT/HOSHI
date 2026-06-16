@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useCoinPrices, getJupiterQuote, getSolBalance } from "@/hooks/usePrices";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { executeJupiterSwap } from "@/lib/solana-tx";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";

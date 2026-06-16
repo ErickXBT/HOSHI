@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/layout/TopNav";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useCoinPrices, getSolBalance } from "@/hooks/usePrices";
 import { getEvmBalance } from "@/lib/wallet-gen";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";

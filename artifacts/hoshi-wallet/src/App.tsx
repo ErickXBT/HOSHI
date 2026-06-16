@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
-import { WalletProvider, useWallet } from "@/contexts/WalletContext";
+import { WalletProvider } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { Sidebar } from "@/components/layout/Sidebar";
 

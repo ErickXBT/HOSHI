@@ -3,7 +3,7 @@ import { ArrowLeft, Gift, Copy, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 
 export default function Affiliate() {

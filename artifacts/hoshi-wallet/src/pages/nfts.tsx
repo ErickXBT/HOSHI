@@ -2,7 +2,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Image as ImageIcon, ExternalLink } from "lucide-react";
 import { useIsDesktop } from "@/hooks/use-mobile";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 
 export default function Nfts() {
   const { activeWallet } = useWallet();

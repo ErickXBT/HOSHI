@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import {
   LayoutDashboard, PieChart, RefreshCcw, BarChart3,
   ArrowUpRight, ArrowDownLeft, Image, Plus, Users,

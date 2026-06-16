@@ -30,7 +30,7 @@ interface WalletContextType {
   deviceId: string;
 }
 
-const WalletContext = createContext<WalletContextType | null>(null);
+export const WalletContext = createContext<WalletContextType | null>(null);
 
 const STORAGE_KEY = "hoshi_wallets_v2";
 const ACTIVE_KEY = "hoshi_active_v2";
@@ -252,8 +252,3 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useWallet() {
-  const ctx = useContext(WalletContext);
-  if (!ctx) throw new Error("useWallet must be used inside WalletProvider");
-  return ctx;
-}

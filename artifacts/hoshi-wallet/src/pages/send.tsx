@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet } from "@/hooks/useWallet";
 import { useCoinPrices } from "@/hooks/usePrices";
 import { isValidEvmAddress, isValidSolAddress, estimateGasFee, getEvmBalance } from "@/lib/wallet-gen";
 import { ethers } from "ethers";
