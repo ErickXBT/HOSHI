@@ -1,18 +1,20 @@
 import { BottomNav } from "@/components/layout/BottomNav";
-import { ArrowLeft, Shield, Bell, Globe, LogOut, ChevronRight, Fingerprint, EyeOff, Key, Copy, CheckCircle2, Sun, Moon } from "lucide-react";
+import { ArrowLeft, Shield, Bell, Globe, LogOut, ChevronRight, Fingerprint, EyeOff, Key, Copy, CheckCircle2, Sun, Moon, Camera } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useWallet } from "@/hooks/useWallet";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { decryptData } from "@/lib/wallet-crypto";
 import { Input } from "@/components/ui/input";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
+
+const PROFILE_PHOTO_KEY = "hoshi_profile_photo";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
@@ -20,6 +22,7 @@ export default function Settings() {
   const { toast } = useToast();
   const isDesktop = useIsDesktop();
   const { theme, toggleTheme } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [hideBalances, setHideBalances] = useState(false);
   const [priceAlerts, setPriceAlerts] = useState(true);
@@ -29,6 +32,7 @@ export default function Settings() {
   const [revealedSeed, setRevealedSeed] = useState("");
   const [seedError, setSeedError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string>(() => localStorage.getItem(PROFILE_PHOTO_KEY) ?? "");
 
   useEffect(() => {
     const saved = localStorage.getItem("hoshi_settings");
@@ -43,6 +47,23 @@ export default function Settings() {
   const saveSettings = (patch: object) => {
     const current = JSON.parse(localStorage.getItem("hoshi_settings") || "{}");
     localStorage.setItem("hoshi_settings", JSON.stringify({ ...current, ...patch }));
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 5MB.", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      localStorage.setItem(PROFILE_PHOTO_KEY, base64);
+      setProfilePhoto(base64);
+      toast({ title: "Photo updated", description: "Profile photo saved." });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRevealSeed = async () => {
@@ -62,10 +83,7 @@ export default function Settings() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleLock = () => {
-    lockWallet();
-    setLocation("/");
-  };
+  const handleLock = () => { lockWallet(); setLocation("/"); };
 
   const shortAddr = activeWallet?.evmAddress
     ? `${activeWallet.evmAddress.slice(0, 8)}...${activeWallet.evmAddress.slice(-6)}`
@@ -85,11 +103,28 @@ export default function Settings() {
 
         {/* Profile */}
         <div className="bg-card rounded-3xl p-5 border border-border flex items-center gap-4">
-          <Avatar className="w-16 h-16 border-2 border-border">
-            <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
-              {activeWallet?.name?.charAt(0)?.toUpperCase() ?? "W"}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="w-16 h-16 border-2 border-border cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              <AvatarImage src={profilePhoto} alt="Profile" className="object-cover" />
+              <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
+                {activeWallet?.name?.charAt(0)?.toUpperCase() ?? "W"}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-card hover:bg-primary/80 transition-colors"
+              title="Change profile photo"
+            >
+              <Camera className="w-3 h-3 text-primary-foreground" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+          </div>
           <div className="flex-1 overflow-hidden">
             <h2 className="font-bold text-lg">{activeWallet?.name ?? "Wallet"}</h2>
             <p className="text-xs text-muted-foreground font-mono truncate">{shortAddr}</p>
@@ -104,6 +139,10 @@ export default function Settings() {
             </div>
           </Link>
         </div>
+
+        <p className="text-[10px] text-muted-foreground px-1">
+          📷 Tap the camera icon to change your profile photo. Accepts JPG, PNG, GIF (max 5MB). Stored locally on this device.
+        </p>
 
         {/* Security */}
         <div className="space-y-2">
@@ -161,10 +200,7 @@ export default function Settings() {
                 onClick={toggleTheme}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary border border-border text-sm font-medium hover:border-primary/40 transition-colors"
               >
-                {theme === "dark"
-                  ? <><Sun className="w-3.5 h-3.5" /> Light</>
-                  : <><Moon className="w-3.5 h-3.5" /> Dark</>
-                }
+                {theme === "dark" ? <><Sun className="w-3.5 h-3.5" /> Light</> : <><Moon className="w-3.5 h-3.5" /> Dark</>}
               </button>
             </div>
             <div className="p-4 flex items-center justify-between border-b border-border/50">
@@ -173,9 +209,7 @@ export default function Settings() {
                 <p className="font-semibold text-sm">Currency</p>
               </div>
               <Select value={currency} onValueChange={v => { setCurrency(v); saveSettings({ currency: v }); }}>
-                <SelectTrigger className="w-24 h-8 text-xs border-border bg-card">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="w-24 h-8 text-xs border-border bg-card"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {["USD", "EUR", "GBP", "JPY", "IDR"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -191,7 +225,10 @@ export default function Settings() {
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary"><Bell className="w-4 h-4" /></div>
-                <p className="font-semibold text-sm">Price Alerts</p>
+                <div>
+                  <p className="font-semibold text-sm">Price Alerts</p>
+                  <p className="text-xs text-muted-foreground">Alert when coins move ≥5%</p>
+                </div>
               </div>
               <Switch checked={priceAlerts} onCheckedChange={c => { setPriceAlerts(c); saveSettings({ priceAlerts: c }); }} className="data-[state=checked]:bg-primary" />
             </div>

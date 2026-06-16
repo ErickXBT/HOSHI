@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -21,6 +22,8 @@ import AddToken from "@/pages/add-token";
 import Affiliate from "@/pages/affiliate";
 import Settings from "@/pages/settings";
 import History from "@/pages/history";
+import News from "@/pages/news";
+import Polymarket from "@/pages/polymarket";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +46,8 @@ function AppRoutes() {
       <Route path="/affiliate" component={Affiliate} />
       <Route path="/settings" component={Settings} />
       <Route path="/history" component={History} />
+      <Route path="/news" component={News} />
+      <Route path="/polymarket" component={Polymarket} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -84,12 +89,14 @@ function App() {
     <ThemeProvider>
       <WalletProvider>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <AppContent />
-              <Toaster />
-            </WouterRouter>
-          </TooltipProvider>
+          <NotificationProvider>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <AppContent />
+                <Toaster />
+              </WouterRouter>
+            </TooltipProvider>
+          </NotificationProvider>
         </QueryClientProvider>
       </WalletProvider>
     </ThemeProvider>
