@@ -72,12 +72,12 @@ export default function Market() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-sm">
-                      ${coin.current_price < 0.01
+                      {coin.current_price == null ? "—" : `$${coin.current_price < 0.01
                         ? coin.current_price.toPrecision(4)
-                        : coin.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        : coin.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     </p>
-                    <p className={`text-xs font-medium ${coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
-                      {coin.price_change_percentage_24h >= 0 ? "+" : ""}{coin.price_change_percentage_24h?.toFixed(2)}%
+                    <p className={`text-xs font-medium ${(coin.price_change_percentage_24h ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {(coin.price_change_percentage_24h ?? 0) >= 0 ? "+" : ""}{(coin.price_change_percentage_24h ?? 0).toFixed(2)}%
                     </p>
                   </div>
                 </div>

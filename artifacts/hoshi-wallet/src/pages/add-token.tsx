@@ -149,10 +149,10 @@ export default function AddToken() {
                   <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
                       <div className="text-xs font-medium">
-                        ${coin.current_price < 0.01 ? coin.current_price.toPrecision(3) : coin.current_price.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                        {coin.current_price == null ? "—" : `$${coin.current_price < 0.01 ? coin.current_price.toPrecision(3) : coin.current_price.toLocaleString("en-US", { maximumFractionDigits: 2 })}`}
                       </div>
-                      <div className={`text-[10px] ${coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
-                        {coin.price_change_percentage_24h >= 0 ? "+" : ""}{coin.price_change_percentage_24h.toFixed(2)}%
+                      <div className={`text-[10px] ${(coin.price_change_percentage_24h ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                        {(coin.price_change_percentage_24h ?? 0) >= 0 ? "+" : ""}{(coin.price_change_percentage_24h ?? 0).toFixed(2)}%
                       </div>
                     </div>
                     <Switch
