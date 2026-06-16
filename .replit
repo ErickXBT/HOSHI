@@ -9,28 +9,6 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start HOSHI Wallet"
-
-[[workflows.workflow]]
-name = "Start HOSHI Wallet"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=25867 BASE_PATH=/ pnpm --filter @workspace/hoshi-wallet run dev"
-waitForPort = 25867
 
 [agent]
 stack = "PNPM_WORKSPACE"
