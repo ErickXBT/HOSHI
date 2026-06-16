@@ -1,140 +1,126 @@
 import { TopNav } from "@/components/layout/TopNav";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { useGetMarketOverview, getGetMarketOverviewQueryKey, useGetTrendingTokens, getGetTrendingTokensQueryKey, useGetMarketNews, getGetMarketNewsQueryKey } from "@workspace/api-client-react";
+import { useCoinPrices, useMarketOverview, useTrendingCoins } from "@/hooks/usePrices";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUpRight, ArrowDownLeft, Flame, Newspaper } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Flame, TrendingUp } from "lucide-react";
+import { useIsDesktop } from "@/hooks/use-mobile";
 
 export default function Market() {
-  const { data: overview, isLoading: isLoadingOverview } = useGetMarketOverview({ query: { queryKey: getGetMarketOverviewQueryKey() } });
-  const { data: trending, isLoading: isLoadingTrending } = useGetTrendingTokens({ query: { queryKey: getGetTrendingTokensQueryKey() } });
-  const { data: news, isLoading: isLoadingNews } = useGetMarketNews({ query: { queryKey: getGetMarketNewsQueryKey() } });
+  const { data: coins, isLoading: coinsLoading } = useCoinPrices();
+  const { data: overview, isLoading: overviewLoading } = useMarketOverview();
+  const { data: trending, isLoading: trendingLoading } = useTrendingCoins();
+  const isDesktop = useIsDesktop();
 
   return (
-    <div className="flex-1 flex flex-col h-[100dvh] relative">
+    <div className={`flex-1 flex flex-col ${isDesktop ? "min-h-screen" : "h-[100dvh]"} relative`}>
       <TopNav />
-      
-      <div className="flex-1 overflow-y-auto pb-24 scrollbar-hide px-4 pt-6">
+
+      <div className={`flex-1 overflow-y-auto ${isDesktop ? "px-6 pt-6 pb-8" : "pb-24 px-4 pt-6"} scrollbar-hide`}>
         <h2 className="text-2xl font-bold tracking-tight mb-6">Market</h2>
-        
-        {/* Market Overview */}
+
+        {/* Global Overview */}
         <div className="bg-card rounded-3xl p-5 border border-border shadow-lg mb-8">
           <p className="text-sm text-muted-foreground font-medium mb-1">Global Market Cap</p>
-          {isLoadingOverview ? (
-            <Skeleton className="h-8 w-32 mb-2" />
-          ) : (
-            <div className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-              ${(overview?.totalMarketCapUsd || 0) >= 1e12 ? ((overview?.totalMarketCapUsd || 0) / 1e12).toFixed(2) + 'T' : ((overview?.totalMarketCapUsd || 0) / 1e9).toFixed(2) + 'B'}
-              <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${overview && overview.change24hPct >= 0 ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                {overview && overview.change24hPct >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownLeft className="w-3 h-3" />}
-                {Math.abs(overview?.change24hPct || 0).toFixed(2)}%
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">BTC Dominance</p>
-              {isLoadingOverview ? <Skeleton className="h-5 w-16" /> : <p className="font-bold">{overview?.btcDominancePct.toFixed(1)}%</p>}
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">ETH Dominance</p>
-              {isLoadingOverview ? <Skeleton className="h-5 w-16" /> : <p className="font-bold">{overview?.ethDominancePct.toFixed(1)}%</p>}
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">24h Vol</p>
-              {isLoadingOverview ? <Skeleton className="h-5 w-20" /> : <p className="font-bold">${((overview?.volume24hUsd || 0) / 1e9).toFixed(1)}B</p>}
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Fear & Greed</p>
-              {isLoadingOverview ? <Skeleton className="h-5 w-20" /> : (
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold">{overview?.fearGreedIndex}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold ${overview && overview.fearGreedIndex > 50 ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                    {overview?.fearGreedLabel}
-                  </span>
+          {overviewLoading ? <Skeleton className="h-8 w-36 mb-3" /> : (
+            <div className="text-3xl font-bold tracking-tight mb-3 flex items-center gap-3">
+              ${overview && overview.totalMarketCapUsd >= 1e12
+                ? (overview.totalMarketCapUsd / 1e12).toFixed(2) + "T"
+                : overview ? (overview.totalMarketCapUsd / 1e9).toFixed(2) + "B" : "—"}
+              {overview && (
+                <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${overview.change24hPct >= 0 ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                  {overview.change24hPct >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownLeft className="w-3 h-3" />}
+                  {Math.abs(overview.change24hPct).toFixed(2)}%
                 </div>
               )}
             </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "BTC Dominance", value: overview ? `${overview.btcDominancePct.toFixed(1)}%` : null },
+              { label: "ETH Dominance", value: overview ? `${overview.ethDominancePct.toFixed(1)}%` : null },
+              { label: "24h Volume", value: overview ? `$${(overview.volume24hUsd / 1e9).toFixed(1)}B` : null },
+              { label: "Fear & Greed", value: overview ? `${overview.fearGreedIndex} — ${overview.fearGreedLabel}` : null },
+            ].map(({ label, value }) => (
+              <div key={label} className="space-y-1">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                {overviewLoading || !value ? <Skeleton className="h-5 w-16" /> : <p className="font-bold text-sm">{value}</p>}
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Live Prices */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <h3 className="font-bold text-lg">Live Prices</h3>
+          </div>
+          {coinsLoading ? (
+            Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl mb-2" />)
+          ) : (
+            <div className="space-y-2">
+              {coins?.map(coin => (
+                <div key={coin.id} className="flex items-center justify-between bg-card p-3.5 rounded-2xl border border-border hover:border-primary/30 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full overflow-hidden border border-border bg-black/40 flex items-center justify-center">
+                      <img src={coin.image} alt={coin.symbol} className="w-6 h-6 object-contain" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">{coin.symbol.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground">{coin.name}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-sm">
+                      ${coin.current_price < 0.01
+                        ? coin.current_price.toPrecision(4)
+                        : coin.current_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                    <p className={`text-xs font-medium ${coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {coin.price_change_percentage_24h >= 0 ? "+" : ""}{coin.price_change_percentage_24h?.toFixed(2)}%
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Trending */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Flame className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-lg">Trending Coins</h3>
+            <h3 className="font-bold text-lg">Trending</h3>
           </div>
-          <div className="space-y-3">
-            {isLoadingTrending ? (
-              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
-            ) : (
-              trending?.map((token, i) => (
-                <div key={i} className="flex items-center justify-between bg-card p-3.5 rounded-2xl border border-border">
+          {trendingLoading ? (
+            Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl mb-2" />)
+          ) : (
+            <div className="space-y-2">
+              {trending?.map((coin, i) => (
+                <div key={coin.id} className="flex items-center justify-between bg-card p-3.5 rounded-2xl border border-border">
                   <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground font-bold w-4">{i + 1}</span>
+                    <span className="text-muted-foreground font-bold w-5 text-sm">{i + 1}</span>
                     <div className="w-8 h-8 rounded-full bg-black/40 border border-border flex items-center justify-center overflow-hidden">
-                      {token.logoUrl ? <img src={token.logoUrl} alt={token.symbol} className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold">{token.symbol[0]}</span>}
+                      <img src={coin.thumb} alt={coin.symbol} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-sm">{token.symbol}</span>
-                      <span className="text-xs text-muted-foreground">{token.name}</span>
+                    <div>
+                      <p className="font-bold text-sm">{coin.symbol.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[120px]">{coin.name}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="font-bold text-sm">${token.priceUsd < 0.01 ? token.priceUsd.toPrecision(4) : token.priceUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                    <span className={`text-xs font-medium flex items-center ${token.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {token.change24h >= 0 ? '+' : ''}{token.change24h.toFixed(2)}%
-                    </span>
+                  <div className="text-right">
+                    {coin.price > 0 && <p className="font-bold text-sm">${coin.price < 0.01 ? coin.price.toPrecision(3) : coin.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
+                    <p className={`text-xs font-medium ${coin.change24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {coin.change24h >= 0 ? "+" : ""}{coin.change24h.toFixed(1)}%
+                    </p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* News */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Newspaper className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-lg">Latest Intel</h3>
-          </div>
-          <div className="space-y-4">
-            {isLoadingNews ? (
-              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
-            ) : (
-              news?.map((article, i) => (
-                <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" className="block bg-card p-4 rounded-2xl border border-border hover:border-primary/50 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{article.source}</span>
-                        <span className="w-1 h-1 rounded-full bg-border" />
-                        <span className="text-[10px] text-muted-foreground">{new Date(article.publishedAt).toLocaleDateString()}</span>
-                      </div>
-                      <h4 className="font-bold text-sm line-clamp-2 leading-snug">{article.title}</h4>
-                      {article.sentiment && (
-                        <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
-                          article.sentiment === 'bullish' ? 'bg-green-500/10 text-green-500' : 
-                          article.sentiment === 'bearish' ? 'bg-red-500/10 text-red-500' : 
-                          'bg-muted text-muted-foreground'
-                        }`}>
-                          {article.sentiment}
-                        </span>
-                      )}
-                    </div>
-                    {article.imageUrl && (
-                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-                        <img src={article.imageUrl} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                  </div>
-                </a>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-      
+
       <BottomNav />
     </div>
   );

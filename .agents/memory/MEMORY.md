@@ -1,0 +1,2 @@
+- [@noble/curves subpath imports](noble-curves-exports.md) — v2.2.0 uses `./ed25519.js` extension in exports, not `./ed25519`
+- [HOSHI Wallet architecture](hoshi-wallet-arch.md) — key decisions: localStorage keys, breakpoints, RPC endpoints, no backend needed

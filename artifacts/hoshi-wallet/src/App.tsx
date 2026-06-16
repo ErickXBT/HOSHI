@@ -1,8 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
+import { WalletProvider, useWallet } from "@/contexts/WalletContext";
+import { useIsDesktop } from "@/hooks/use-mobile";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -17,9 +20,13 @@ import AddToken from "@/pages/add-token";
 import Affiliate from "@/pages/affiliate";
 import Settings from "@/pages/settings";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 30_000 },
+  },
+});
 
-function Router() {
+function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Login} />
@@ -38,24 +45,55 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { isLocked } = useWallet();
+  const [location] = useLocation();
+  const isDesktop = useIsDesktop();
+  const isOnLoginPage = location === "/" || location === "";
+
+  if (isDesktop) {
+    if (!isLocked && !isOnLoginPage) {
+      return (
+        <div className="flex h-screen bg-background overflow-hidden">
+          <Sidebar />
+          <div className="flex-1 overflow-y-auto bg-background">
+            <AppRoutes />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen bg-background">
+        <AppRoutes />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-[100dvh] w-full bg-black flex justify-center">
+      <div className="w-full max-w-[390px] min-h-[100dvh] bg-background relative overflow-hidden shadow-2xl flex flex-col">
+        <AppRoutes />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="min-h-[100dvh] w-full bg-black flex justify-center">
-          <div className="w-full max-w-[390px] min-h-[100dvh] bg-background relative overflow-hidden shadow-2xl flex flex-col">
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
+    <WalletProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <AppContent />
             <Toaster />
-          </div>
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+          </WouterRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </WalletProvider>
   );
 }
 

@@ -1,0 +1,41 @@
+{
+  "name": "HOSHI Wallet",
+  "short_name": "HOSHI",
+  "description": "Next-Gen Crypto Super Wallet — non-custodial, multi-chain",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#F97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your wallet balance"
+    },
+    {
+      "name": "Swap",
+      "short_name": "Swap",
+      "url": "/swap",
+      "description": "Swap tokens instantly"
+    },
+    {
+      "name": "Market",
+      "short_name": "Market",
+      "url": "/market",
+      "description": "Live crypto prices"
+    }
+  ],
+  "categories": ["finance", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}

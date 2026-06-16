@@ -1,70 +1,41 @@
 import { TopNav } from "@/components/layout/TopNav";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { useGetActiveWallet, getGetActiveWalletQueryKey, useListNfts, getListNftsQueryKey } from "@workspace/api-client-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, ExternalLink } from "lucide-react";
+import { useIsDesktop } from "@/hooks/use-mobile";
+import { useWallet } from "@/contexts/WalletContext";
 
 export default function Nfts() {
-  const { data: activeWallet } = useGetActiveWallet({ query: { queryKey: getGetActiveWalletQueryKey() } });
-  const walletId = activeWallet?.id || 1;
-  const { data: nfts, isLoading } = useListNfts(walletId, { query: { enabled: !!activeWallet, queryKey: getListNftsQueryKey(walletId) } });
+  const { activeWallet } = useWallet();
+  const isDesktop = useIsDesktop();
 
   return (
-    <div className="flex-1 flex flex-col h-[100dvh] relative">
+    <div className={`flex-1 flex flex-col ${isDesktop ? "min-h-screen" : "h-[100dvh]"} relative`}>
       <TopNav />
-      
-      <div className="flex-1 overflow-y-auto pb-24 scrollbar-hide px-4 pt-6">
+      <div className={`flex-1 overflow-y-auto ${isDesktop ? "px-6 pt-6 pb-8" : "pb-24 px-4 pt-6"} scrollbar-hide`}>
         <h2 className="text-2xl font-bold tracking-tight mb-6">Gallery</h2>
-        
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-2xl p-2 border border-border">
-                <Skeleton className="w-full aspect-square rounded-xl mb-3" />
-                <Skeleton className="h-4 w-3/4 mb-1 mx-2" />
-                <Skeleton className="h-3 w-1/2 mx-2 mb-2" />
-              </div>
-            ))}
+
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+            <ImageIcon className="w-10 h-10 text-muted-foreground/30" />
           </div>
-        ) : nfts && nfts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {nfts.map((nft) => (
-              <div key={nft.id} className="bg-card rounded-2xl p-2 border border-border hover:border-primary/50 transition-colors cursor-pointer group">
-                <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-black/40 relative">
-                  {nft.imageUrl ? (
-                    <img src={nft.imageUrl} alt={nft.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
-                    </div>
-                  )}
-                  {nft.chain && (
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-white/10">
-                      {nft.chain}
-                    </div>
-                  )}
-                </div>
-                <div className="px-1 pb-1">
-                  <h3 className="font-bold text-sm truncate">{nft.name}</h3>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground truncate max-w-[60%]">{nft.collection}</p>
-                    {nft.floorPriceUsd && <span className="text-xs font-bold text-primary">${nft.floorPriceUsd}</span>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center mb-4">
-              <ImageIcon className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="font-bold text-lg mb-2">No NFTs found</h3>
-            <p className="text-sm text-muted-foreground max-w-[200px]">Your digital collectibles will appear here.</p>
-          </div>
-        )}
+          <h3 className="font-bold text-xl mb-2">No NFTs Yet</h3>
+          <p className="text-sm text-muted-foreground max-w-[250px] mb-6">
+            Your digital collectibles will appear here once you acquire NFTs on Ethereum or Solana.
+          </p>
+
+          {activeWallet?.evmAddress && (
+            <a
+              href={`https://opensea.io/${activeWallet.evmAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors border border-primary/30 rounded-xl px-4 py-2 hover:bg-primary/10"
+            >
+              <ExternalLink className="w-4 h-4" />
+              View on OpenSea
+            </a>
+          )}
+        </div>
       </div>
-      
       <BottomNav />
     </div>
   );
