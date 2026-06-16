@@ -8,14 +8,17 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useCoinPrices } from "@/hooks/usePrices";
 import { isValidEvmAddress, isValidSolAddress, estimateGasFee, getEvmBalance } from "@/lib/wallet-gen";
 import { ethers } from "ethers";
+import { sendSol, getSolLamports } from "@/lib/solana-tx";
 import { useToast } from "@/hooks/use-toast";
 import { useIsDesktop } from "@/hooks/use-mobile";
 
 const CHAINS = [
-  { symbol: "ETH", name: "Ethereum", color: "#627EEA", rpc: "https://cloudflare-eth.com", type: "evm" },
+  { symbol: "ETH", name: "Ethereum", color: "#627EEA", rpc: "https://eth.llamarpc.com", type: "evm" },
   { symbol: "SOL", name: "Solana", color: "#14F195", rpc: "", type: "sol" },
   { symbol: "BNB", name: "BNB Chain", color: "#F3BA2F", rpc: "https://bsc-dataseed1.binance.org", type: "evm" },
   { symbol: "MATIC", name: "Polygon", color: "#8247E5", rpc: "https://polygon-rpc.com", type: "evm" },
+  { symbol: "ARB", name: "Arbitrum", color: "#12AAFF", rpc: "https://arb1.arbitrum.io/rpc", type: "evm" },
+  { symbol: "BASE", name: "Base", color: "#0052FF", rpc: "https://mainnet.base.org", type: "evm" },
 ];
 
 export default function Send() {
@@ -27,7 +30,7 @@ export default function Send() {
   const [balance, setBalance] = useState<string>("0");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
-  const { activeWallet, getEvmSigner } = useWallet();
+  const { activeWallet, getEvmSigner, getSolKeypair, isLocked } = useWallet();
   const { data: prices } = useCoinPrices();
   const isDesktop = useIsDesktop();
 
@@ -40,9 +43,13 @@ export default function Send() {
     : false;
 
   useEffect(() => {
-    if (selectedChain.type !== "evm" || !activeWallet?.evmAddress) return;
-    getEvmBalance(activeWallet.evmAddress, selectedChain.rpc).then(b => setBalance(b));
-  }, [selectedChain, activeWallet?.evmAddress]);
+    if (!activeWallet) return;
+    if (selectedChain.type === "evm") {
+      getEvmBalance(activeWallet.evmAddress, selectedChain.rpc).then(b => setBalance(b));
+    } else if (selectedChain.type === "sol" && activeWallet.solAddress) {
+      getSolLamports(activeWallet.solAddress).then(lam => setBalance((Number(lam) / 1e9).toFixed(9)));
+    }
+  }, [selectedChain, activeWallet?.evmAddress, activeWallet?.solAddress]);
 
   useEffect(() => {
     if (!isValidAddr || !amount || parseFloat(amount) <= 0 || selectedChain.type !== "evm" || !activeWallet?.evmAddress) {
@@ -58,34 +65,74 @@ export default function Send() {
 
   const handleSend = async () => {
     if (!isValidAddr || !amount || !activeWallet) return;
-
-    if (selectedChain.type === "sol") {
-      toast({ title: "Solana Send", description: "Solana transaction signing is coming soon. Use a hardware wallet or Phantom in the meantime.", variant: "destructive" });
+    if (isLocked) {
+      toast({ title: "Wallet Locked", description: "Please unlock your wallet first.", variant: "destructive" });
       return;
     }
 
     setSending(true);
     try {
-      const signer = getEvmSigner(selectedChain.rpc);
-      if (!signer) throw new Error("Wallet locked — please reconnect");
+      if (selectedChain.type === "sol") {
+        const keypair = await getSolKeypair();
+        if (!keypair) throw new Error("Could not derive Solana keypair — please re-enter your password");
 
-      const tx = await signer.sendTransaction({
-        to: address,
-        value: ethers.parseEther(amount),
-      });
+        const lamports = BigInt(Math.round(parseFloat(amount) * 1e9));
+        const sig = await sendSol(keypair.pubKey, address, lamports, keypair.privKey);
 
-      toast({
-        title: "Transaction Sent ✅",
-        description: `TX Hash: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-6)}`,
-      });
-    } catch (err: any) {
-      toast({ title: "Send Failed", description: err.message ?? "Transaction failed.", variant: "destructive" });
+        toast({
+          title: "SOL Sent ✅",
+          description: (
+            <span>
+              TX:{" "}
+              <a
+                href={`https://solscan.io/tx/${sig}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-primary"
+              >
+                {sig.slice(0, 8)}...{sig.slice(-6)}
+              </a>
+            </span>
+          ) as unknown as string,
+        });
+      } else {
+        const signer = getEvmSigner(selectedChain.rpc);
+        if (!signer) throw new Error("Wallet locked — please reconnect");
+
+        const tx = await signer.sendTransaction({
+          to: address,
+          value: ethers.parseEther(amount),
+        });
+
+        toast({
+          title: `${selectedChain.symbol} Sent ✅`,
+          description: (
+            <span>
+              TX:{" "}
+              <a
+                href={`https://etherscan.io/tx/${tx.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-primary"
+              >
+                {tx.hash.slice(0, 8)}...{tx.hash.slice(-6)}
+              </a>
+            </span>
+          ) as unknown as string,
+        });
+      }
+
+      setAddress("");
+      setAmount("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Transaction failed.";
+      toast({ title: "Send Failed ❌", description: msg, variant: "destructive" });
     } finally {
       setSending(false);
     }
   };
 
-  const maxAmount = parseFloat(balance) - (gasFee ? parseFloat(gasFee.feeEth) : 0.001);
+  const maxAmount = parseFloat(balance) - (gasFee ? parseFloat(gasFee.feeEth) : selectedChain.type === "sol" ? 0.000005 : 0.001);
 
   return (
     <div className={`flex-1 flex flex-col ${isDesktop ? "min-h-screen" : "h-[100dvh]"} relative bg-background`}>
@@ -134,7 +181,7 @@ export default function Send() {
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Recipient Address</label>
           <div className="relative">
             <Input
-              placeholder={selectedChain.type === "evm" ? "0x..." : "Solana address..."}
+              placeholder={selectedChain.type === "evm" ? "0x..." : "Solana address (base58)..."}
               value={address}
               onChange={e => setAddress(e.target.value)}
               className={`pr-12 bg-card border-border h-14 rounded-2xl font-mono text-sm ${address && !isValidAddr ? "border-red-500/50" : address && isValidAddr ? "border-green-500/50" : ""}`}
@@ -169,21 +216,30 @@ export default function Send() {
           </div>
         </div>
 
-        {/* Gas Estimate */}
+        {/* Fee Info */}
         <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Network</span>
             <span className="font-medium">{selectedChain.name}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Gas Price</span>
-            <span className="font-medium text-primary">{gasFee ? `${parseFloat(gasFee.gasPriceGwei).toFixed(2)} Gwei` : "—"}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Network Fee</span>
-            <span className="font-medium text-primary">{gasFee ? `~${parseFloat(gasFee.feeEth).toFixed(6)} ${selectedChain.symbol}` : "—"}</span>
-          </div>
-          {amount && gasFee && (
+          {selectedChain.type === "evm" ? (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Gas Price</span>
+                <span className="font-medium text-primary">{gasFee ? `${parseFloat(gasFee.gasPriceGwei).toFixed(2)} Gwei` : "—"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Network Fee</span>
+                <span className="font-medium text-primary">{gasFee ? `~${parseFloat(gasFee.feeEth).toFixed(6)} ${selectedChain.symbol}` : "—"}</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Network Fee</span>
+              <span className="font-medium text-primary">~0.000005 SOL</span>
+            </div>
+          )}
+          {amount && gasFee && selectedChain.type === "evm" && (
             <div className="flex justify-between text-sm pt-2 border-t border-border/50">
               <span className="font-medium text-muted-foreground">Total</span>
               <span className="font-bold">{(parseFloat(amount || "0") + parseFloat(gasFee.feeEth)).toFixed(6)} {selectedChain.symbol}</span>
@@ -193,12 +249,16 @@ export default function Send() {
 
         <Button
           className="w-full h-14 rounded-2xl text-lg font-bold group"
-          disabled={!amount || !isValidAddr || sending}
+          disabled={!amount || !isValidAddr || sending || parseFloat(amount) <= 0}
           onClick={handleSend}
         >
-          {sending ? "Sending..." : "Confirm & Send"}
+          {sending ? "Sending..." : `Send ${selectedChain.symbol}`}
           {!sending && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
         </Button>
+
+        {isLocked && (
+          <p className="text-center text-xs text-amber-500">⚠️ Wallet is locked — unlock it from the login screen to send</p>
+        )}
       </div>
 
       <BottomNav />

@@ -4,7 +4,7 @@ import {
   LayoutDashboard, PieChart, RefreshCcw, BarChart3,
   ArrowUpRight, ArrowDownLeft, Image, Plus, Users,
   Star, Settings, Bell, LogOut, ChevronDown, Copy,
-  Check, Trash2, Wallet, X,
+  Check, Trash2, Clock, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -31,8 +31,9 @@ const swapNav: NavItem[] = [
 const actionNav: NavItem[] = [
   { href: "/send", icon: ArrowUpRight, label: "Send" },
   { href: "/receive", icon: ArrowDownLeft, label: "Receive" },
+  { href: "/history", icon: Clock, label: "History" },
   { href: "/nfts", icon: Image, label: "NFTs" },
-  { href: "/add-token", icon: Plus, label: "Add Token" },
+  { href: "/add-token", icon: Plus, label: "Manage Tokens" },
   { href: "/affiliate", icon: Users, label: "Affiliate" },
 ];
 

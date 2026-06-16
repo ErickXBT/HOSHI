@@ -19,6 +19,7 @@ import Nfts from "@/pages/nfts";
 import AddToken from "@/pages/add-token";
 import Affiliate from "@/pages/affiliate";
 import Settings from "@/pages/settings";
+import History from "@/pages/history";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/add-token" component={AddToken} />
       <Route path="/affiliate" component={Affiliate} />
       <Route path="/settings" component={Settings} />
+      <Route path="/history" component={History} />
       <Route component={NotFound} />
     </Switch>
   );

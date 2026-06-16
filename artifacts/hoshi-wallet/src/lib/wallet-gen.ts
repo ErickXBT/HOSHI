@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { ed25519 } from "@noble/curves/ed25519.js";
+export { ed25519 };
 
 function base58encode(bytes: Uint8Array): string {
   const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -31,6 +32,36 @@ async function hardenedChild(
   );
   const result = new Uint8Array(await crypto.subtle.sign("HMAC", hmacKey, data));
   return { privKey: result.slice(0, 32), chainCode: result.slice(32) };
+}
+
+export async function getSolanaKeypairFromMnemonic(phrase: string): Promise<{
+  privKey: Uint8Array;
+  pubKey: Uint8Array;
+}> {
+  const mnemonic = ethers.Mnemonic.fromPhrase(phrase.trim());
+  const seedHex = mnemonic.computeSeed();
+  const seedBytes = ethers.getBytes(seedHex);
+
+  const masterKeyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode("ed25519 seed"),
+    { name: "HMAC", hash: "SHA-512" },
+    false,
+    ["sign"]
+  );
+  const masterRaw = new Uint8Array(await crypto.subtle.sign("HMAC", masterKeyMaterial, seedBytes));
+  let privPart = masterRaw.slice(0, 32);
+  let chainPart = masterRaw.slice(32);
+
+  const solPath = [44 | 0x80000000, 501 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000];
+  for (const idx of solPath) {
+    const child = await hardenedChild(privPart, chainPart, idx);
+    privPart = child.privKey;
+    chainPart = child.chainCode;
+  }
+
+  const pubKey = ed25519.getPublicKey(privPart);
+  return { privKey: privPart, pubKey };
 }
 
 export async function generateWalletFromMnemonic(phrase: string): Promise<{

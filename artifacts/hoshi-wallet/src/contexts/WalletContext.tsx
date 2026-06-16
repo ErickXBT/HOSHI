@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { ethers } from "ethers";
 import { encryptData, decryptData } from "@/lib/wallet-crypto";
-import { generateWalletFromMnemonic, generateNewMnemonic, isValidMnemonic } from "@/lib/wallet-gen";
+import { generateWalletFromMnemonic, generateNewMnemonic, isValidMnemonic, getSolanaKeypairFromMnemonic } from "@/lib/wallet-gen";
 
 export interface WalletEntry {
   id: string;
@@ -25,6 +25,7 @@ interface WalletContextType {
   setActiveWalletId: (id: string) => void;
   deleteWallet: (id: string) => void;
   getEvmSigner: (rpcUrl?: string) => ethers.Wallet | null;
+  getSolKeypair: () => Promise<{ privKey: Uint8Array; pubKey: Uint8Array } | null>;
   addWalletFromDashboard: () => void;
   deviceId: string;
 }
@@ -62,13 +63,13 @@ async function fetchDbWallets(deviceId: string): Promise<WalletEntry[]> {
     const res = await fetch(`/api/hoshi-wallets?deviceId=${encodeURIComponent(deviceId)}`);
     if (!res.ok) return [];
     const data = await res.json();
-    return data.map((w: any) => ({
+    return data.map((w: Record<string, unknown>) => ({
       id: w.walletId,
       name: w.name,
       evmAddress: w.evmAddress,
       solAddress: w.solAddress,
       encrypted: w.encrypted,
-      createdAt: new Date(w.createdAt).getTime(),
+      createdAt: new Date(w.createdAt as string).getTime(),
     }));
   } catch {
     return [];
@@ -227,6 +228,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, [unlockedMnemonic]);
 
+  const getSolKeypair = useCallback(async (): Promise<{ privKey: Uint8Array; pubKey: Uint8Array } | null> => {
+    if (!unlockedMnemonic) return null;
+    try {
+      return await getSolanaKeypairFromMnemonic(unlockedMnemonic);
+    } catch {
+      return null;
+    }
+  }, [unlockedMnemonic]);
+
   const addWalletFromDashboard = useCallback(() => {
     if (_addWalletCallback) _addWalletCallback();
   }, []);
@@ -235,7 +245,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     <WalletContext.Provider value={{
       wallets, activeWallet, unlockedMnemonic, isLocked, isSyncing, deviceId,
       createWallet, importWallet, connectWallet, lockWallet,
-      setActiveWalletId, deleteWallet, getEvmSigner, addWalletFromDashboard,
+      setActiveWalletId, deleteWallet, getEvmSigner, getSolKeypair, addWalletFromDashboard,
     }}>
       {children}
     </WalletContext.Provider>
