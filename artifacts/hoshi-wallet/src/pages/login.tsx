@@ -159,74 +159,83 @@ function LoginForm() {
           ))}
         </TabsList>
 
-        {/* CONNECT TAB — wallet card selector */}
+        {/* CONNECT TAB */}
         <TabsContent value="connect">
-          <div className="space-y-4">
-            {wallets.length === 0 ? (
-              <div className="p-6 rounded-2xl border border-border/50 bg-card/40 text-center">
-                <Wallet className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">No wallets found.</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Switch to CREATE to get started.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleConnect} className="space-y-4 p-5 rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-sm">
-                {/* Wallet selector */}
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Select Wallet</Label>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {wallets.map(w => (
-                      <button
-                        key={w.id}
-                        type="button"
-                        onClick={() => setSelectedWalletId(w.id)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                          selectedWalletId === w.id
-                            ? "border-primary bg-primary/10"
-                            : "border-border/50 bg-black/20 hover:border-primary/40 hover:bg-primary/5"
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                          {w.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">{w.name}</p>
-                          <p className="font-mono text-[10px] text-muted-foreground truncate">
-                            {w.evmAddress.slice(0, 8)}...{w.evmAddress.slice(-6)}
-                          </p>
-                        </div>
-                        {selectedWalletId === w.id && (
-                          <Check className="w-4 h-4 text-primary shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Password</Label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type={showPw ? "text" : "password"}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Enter your wallet password"
-                      className="pl-9 pr-9 bg-black/40 border-border/50"
-                    />
-                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          <form onSubmit={handleConnect} className="space-y-4 p-5 rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-sm">
+            {/* Wallet selector (shown when wallets exist) */}
+            {wallets.length > 0 && (
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Select Wallet</Label>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {wallets.map(w => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => setSelectedWalletId(w.id)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                        selectedWalletId === w.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border/50 bg-black/20 hover:border-primary/40 hover:bg-primary/5"
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                        {w.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{w.name}</p>
+                        <p className="font-mono text-[10px] text-muted-foreground truncate">
+                          {w.evmAddress.slice(0, 8)}...{w.evmAddress.slice(-6)}
+                        </p>
+                      </div>
+                      {selectedWalletId === w.id && (
+                        <Check className="w-4 h-4 text-primary shrink-0" />
+                      )}
                     </button>
-                  </div>
+                  ))}
                 </div>
-
-                <Button type="submit" className="w-full mt-2 font-bold tracking-wider group" disabled={loading || !selectedWalletId || !password}>
-                  {loading ? "UNLOCKING..." : "ACCESS WALLET"}
-                  {!loading && <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />}
-                </Button>
-              </form>
+              </div>
             )}
-          </div>
+
+            {/* Wallet ID / Name input (shown when no wallets saved yet) */}
+            {wallets.length === 0 && (
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Wallet Name / ID</Label>
+                <div className="relative">
+                  <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    placeholder="Enter your wallet name"
+                    className="pl-9 bg-black/40 border-border/50"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground pt-1">No saved wallets found. Create one first to access this wallet.</p>
+              </div>
+            )}
+
+            {/* Password */}
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Password</Label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Enter your wallet password"
+                  className="pl-9 pr-9 bg-black/40 border-border/50"
+                />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full mt-2 font-bold tracking-wider group" disabled={loading || (!selectedWalletId && wallets.length > 0) || !password}>
+              {loading ? "UNLOCKING..." : "ACCESS WALLET"}
+              {!loading && <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />}
+            </Button>
+          </form>
         </TabsContent>
 
         {/* CREATE TAB */}
@@ -299,8 +308,7 @@ export default function Login() {
             <div className="w-28 h-28 rounded-3xl border-2 border-primary/50 bg-black/30 flex items-center justify-center mb-6 relative overflow-hidden backdrop-blur-sm">
               <img src={mascotLogo} alt="HOSHI" className="w-20 h-20 object-contain drop-shadow-2xl" />
             </div>
-            <h1 className="text-5xl font-bold tracking-widest text-white mb-2">HOSHI</h1>
-            <p className="text-sm text-white/60 tracking-[0.3em] uppercase mb-12">Next-Gen Crypto Super Swap</p>
+            <h1 className="text-5xl font-bold tracking-widest text-white mb-12">HOSHI</h1>
             <div className="space-y-4 w-full max-w-xs">
               {[
                 { icon: Shield, title: "Non-Custodial", desc: "You own your keys, always" },
@@ -342,7 +350,6 @@ export default function Login() {
           <img src={mascotLogo} alt="HOSHI" className="w-full h-full object-contain relative z-10 drop-shadow-md" />
         </div>
         <h1 className="text-3xl font-bold tracking-widest text-foreground">HOSHI</h1>
-        <p className="text-xs text-muted-foreground mt-2 tracking-widest uppercase">Next-Gen Crypto Super Swap</p>
       </div>
       <div className="flex-1 w-full z-10 pb-10">
         <LoginForm />
