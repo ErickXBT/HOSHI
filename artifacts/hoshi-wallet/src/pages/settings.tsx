@@ -1,5 +1,5 @@
 import { BottomNav } from "@/components/layout/BottomNav";
-import { ArrowLeft, Shield, Bell, Globe, LogOut, ChevronRight, Fingerprint, EyeOff, Key, Copy, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Shield, Bell, Globe, LogOut, ChevronRight, Fingerprint, EyeOff, Key, Copy, CheckCircle2, Sun, Moon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,12 +12,14 @@ import { useState, useEffect } from "react";
 import { decryptData } from "@/lib/wallet-crypto";
 import { Input } from "@/components/ui/input";
 import { useIsDesktop } from "@/hooks/use-mobile";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { activeWallet, lockWallet, deleteWallet } = useWallet();
   const { toast } = useToast();
   const isDesktop = useIsDesktop();
+  const { theme, toggleTheme } = useTheme();
 
   const [hideBalances, setHideBalances] = useState(false);
   const [priceAlerts, setPriceAlerts] = useState(true);
@@ -147,11 +149,31 @@ export default function Settings() {
           <div className="bg-card rounded-2xl border border-border overflow-hidden">
             <div className="p-4 flex items-center justify-between border-b border-border/50">
               <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Theme</p>
+                  <p className="text-xs text-muted-foreground">{theme === "dark" ? "Dark mode" : "Light mode"}</p>
+                </div>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary border border-border text-sm font-medium hover:border-primary/40 transition-colors"
+              >
+                {theme === "dark"
+                  ? <><Sun className="w-3.5 h-3.5" /> Light</>
+                  : <><Moon className="w-3.5 h-3.5" /> Dark</>
+                }
+              </button>
+            </div>
+            <div className="p-4 flex items-center justify-between border-b border-border/50">
+              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary"><Globe className="w-4 h-4" /></div>
                 <p className="font-semibold text-sm">Currency</p>
               </div>
               <Select value={currency} onValueChange={v => { setCurrency(v); saveSettings({ currency: v }); }}>
-                <SelectTrigger className="w-24 h-8 text-xs border-border bg-black/40">
+                <SelectTrigger className="w-24 h-8 text-xs border-border bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

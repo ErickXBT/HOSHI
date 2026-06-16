@@ -1,13 +1,15 @@
 import { Link, useLocation } from "wouter";
-import { ChevronDown, Star, Bell, Settings as SettingsIcon } from "lucide-react";
+import { ChevronDown, Star, Bell, Settings as SettingsIcon, Sun, Moon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function TopNav() {
   const [location] = useLocation();
   const { activeWallet } = useWallet();
   const isDesktop = useIsDesktop();
+  const { theme, toggleTheme } = useTheme();
 
   if (isDesktop) return null;
 
@@ -29,7 +31,17 @@ export function TopNav() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-muted-foreground">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <button
+            onClick={toggleTheme}
+            className="p-2 bg-card rounded-full cursor-pointer hover:text-primary transition-colors"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark"
+              ? <Sun className="w-4 h-4" />
+              : <Moon className="w-4 h-4" />
+            }
+          </button>
           <Link href="/add-token">
             <div className="p-2 bg-card rounded-full cursor-pointer hover:text-primary transition-colors">
               <Star className="w-4 h-4" />

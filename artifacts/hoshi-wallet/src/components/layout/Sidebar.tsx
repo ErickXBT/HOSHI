@@ -4,11 +4,12 @@ import {
   LayoutDashboard, PieChart, RefreshCcw, BarChart3,
   ArrowUpRight, ArrowDownLeft, Image, Plus, Users,
   Star, Settings, Bell, LogOut, ChevronDown, Copy,
-  Check, Trash2, Clock, X,
+  Check, Trash2, Clock, Sun, Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 import newLogo from "@assets/LOGO_HOSHI_SWAP_1781600746164.png";
 
 interface NavItem {
@@ -162,6 +163,7 @@ function WalletDropdown({ onClose }: { onClose: () => void }) {
 export function Sidebar() {
   const { activeWallet, wallets, lockWallet } = useWallet();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
 
   const handleCopyAddress = () => {
@@ -251,6 +253,16 @@ export function Sidebar() {
             <div className="ml-auto w-2 h-2 bg-primary rounded-full" />
           </div>
         </Link>
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-all"
+        >
+          {theme === "dark"
+            ? <Sun className="w-4 h-4 shrink-0" />
+            : <Moon className="w-4 h-4 shrink-0" />
+          }
+          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+        </button>
         <button
           onClick={lockWallet}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500/80 hover:text-red-500 hover:bg-red-500/10 transition-all"

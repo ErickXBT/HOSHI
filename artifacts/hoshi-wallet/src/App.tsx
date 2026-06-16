@@ -2,8 +2,8 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect } from "react";
 import { WalletProvider } from "@/contexts/WalletContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -73,30 +73,26 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full bg-black flex justify-center">
-      <div className="w-full max-w-[390px] min-h-[100dvh] bg-background relative overflow-hidden shadow-2xl flex flex-col">
-        <AppRoutes />
-      </div>
+    <div className="min-h-[100dvh] w-full bg-background flex flex-col">
+      <AppRoutes />
     </div>
   );
 }
 
 function App() {
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
-
   return (
-    <WalletProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <AppContent />
-            <Toaster />
-          </WouterRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </WalletProvider>
+    <ThemeProvider>
+      <WalletProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <AppContent />
+              <Toaster />
+            </WouterRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </WalletProvider>
+    </ThemeProvider>
   );
 }
 
