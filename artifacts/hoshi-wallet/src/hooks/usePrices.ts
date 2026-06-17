@@ -118,21 +118,32 @@ export async function getJupiterQuote(
   return res.json();
 }
 
+const SOL_RPCS = [
+  "https://api.mainnet-beta.solana.com",
+  "https://rpc.ankr.com/solana",
+  "https://solana-api.projectserum.com",
+];
+
 export async function getSolBalance(solAddress: string): Promise<number> {
-  try {
-    const res = await fetch("https://api.mainnet-beta.solana.com", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getBalance",
-        params: [solAddress],
-      }),
-    });
-    const data = await res.json();
-    return (data?.result?.value ?? 0) / 1e9;
-  } catch {
-    return 0;
+  if (!solAddress) return 0;
+  for (const rpc of SOL_RPCS) {
+    try {
+      const res = await fetch(rpc, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getBalance",
+          params: [solAddress, { commitment: "confirmed" }],
+        }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data?.result?.value != null) {
+        return data.result.value / 1e9;
+      }
+    } catch {}
   }
+  return 0;
 }

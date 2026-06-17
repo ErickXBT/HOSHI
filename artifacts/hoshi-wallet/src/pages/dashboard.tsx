@@ -5,12 +5,13 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useWallet } from "@/hooks/useWallet";
 import { useCoinPrices, getSolBalance } from "@/hooks/usePrices";
 import { getEvmBalance } from "@/lib/wallet-gen";
-import { Copy, QrCode, ArrowUpRight, ArrowDownLeft, Eye, EyeOff, RefreshCw, Wallet, ChevronRight } from "lucide-react";
+import { Copy, ArrowUpRight, ArrowDownLeft, Eye, EyeOff, RefreshCw, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useIsDesktop } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { CoinDetailDialog, type CoinDialogData } from "@/components/CoinDetailDialog";
 
 interface TokenRow {
   id: string;
@@ -22,7 +23,8 @@ interface TokenRow {
   balance: number;
   balanceUsd: number;
   chain: string;
-  rpc?: string;
+  marketCap?: number;
+  volume24h?: number;
 }
 
 interface ChainBalance {
@@ -32,17 +34,28 @@ interface ChainBalance {
   matic: number | null;
 }
 
-const CHAINS = [
-  { key: "eth", rpc: "https://eth.llamarpc.com" },
-  { key: "bnb", rpc: "https://bsc-dataseed1.binance.org" },
-  { key: "matic", rpc: "https://polygon-rpc.com" },
-] as const;
-
 async function fetchAllEvmBalances(address: string): Promise<{ eth: number; bnb: number; matic: number }> {
+  const RPCS = {
+    eth: ["https://1rpc.io/eth", "https://eth.llamarpc.com", "https://rpc.ankr.com/eth"],
+    bnb: ["https://rpc.ankr.com/bsc", "https://bsc-dataseed1.binance.org"],
+    matic: ["https://rpc.ankr.com/polygon", "https://polygon-rpc.com"],
+  };
+
+  async function tryBalance(rpcs: string[]): Promise<number> {
+    for (const rpc of rpcs) {
+      try {
+        const val = await getEvmBalance(address, rpc);
+        const n = parseFloat(val);
+        if (!isNaN(n)) return n;
+      } catch {}
+    }
+    return 0;
+  }
+
   const [eth, bnb, matic] = await Promise.all([
-    getEvmBalance(address, "https://eth.llamarpc.com").then(parseFloat),
-    getEvmBalance(address, "https://bsc-dataseed1.binance.org").then(parseFloat),
-    getEvmBalance(address, "https://polygon-rpc.com").then(parseFloat),
+    tryBalance(RPCS.eth),
+    tryBalance(RPCS.bnb),
+    tryBalance(RPCS.matic),
   ]);
   return { eth, bnb, matic };
 }
@@ -57,6 +70,7 @@ export default function Dashboard() {
   const [balances, setBalances] = useState<ChainBalance>({ eth: null, sol: null, bnb: null, matic: null });
   const [hideBalance, setHideBalance] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCoin, setSelectedCoin] = useState<CoinDialogData | null>(null);
 
   useEffect(() => {
     if (isLocked) setLocation("/");
@@ -74,6 +88,8 @@ export default function Dashboard() {
   useEffect(() => {
     setBalances({ eth: null, sol: null, bnb: null, matic: null });
     fetchBalances();
+    const interval = setInterval(fetchBalances, 30_000);
+    return () => clearInterval(interval);
   }, [fetchBalances]);
 
   const handleRefresh = async () => {
@@ -82,21 +98,27 @@ export default function Dashboard() {
     setRefreshing(false);
   };
 
-  const priceMap: Record<string, { price: number; change: number; image: string }> = {};
+  const priceMap: Record<string, { price: number; change: number; image: string; marketCap: number; volume24h: number }> = {};
   if (prices) {
     for (const p of prices) {
-      priceMap[p.symbol.toUpperCase()] = { price: p.current_price, change: p.price_change_percentage_24h, image: p.image };
+      priceMap[p.symbol.toUpperCase()] = {
+        price: p.current_price,
+        change: p.price_change_percentage_24h,
+        image: p.image,
+        marketCap: p.market_cap,
+        volume24h: p.total_volume,
+      };
     }
   }
 
   const tokens: TokenRow[] = [
-    { id: "ethereum", symbol: "ETH", name: "Ethereum", image: priceMap["ETH"]?.image ?? "", price: priceMap["ETH"]?.price ?? 0, change24h: priceMap["ETH"]?.change ?? 0, balance: balances.eth ?? 0, balanceUsd: (balances.eth ?? 0) * (priceMap["ETH"]?.price ?? 0), chain: "ethereum" },
-    { id: "solana", symbol: "SOL", name: "Solana", image: priceMap["SOL"]?.image ?? "", price: priceMap["SOL"]?.price ?? 0, change24h: priceMap["SOL"]?.change ?? 0, balance: balances.sol ?? 0, balanceUsd: (balances.sol ?? 0) * (priceMap["SOL"]?.price ?? 0), chain: "solana" },
-    { id: "binancecoin", symbol: "BNB", name: "BNB Chain", image: priceMap["BNB"]?.image ?? "", price: priceMap["BNB"]?.price ?? 0, change24h: priceMap["BNB"]?.change ?? 0, balance: balances.bnb ?? 0, balanceUsd: (balances.bnb ?? 0) * (priceMap["BNB"]?.price ?? 0), chain: "bsc" },
-    { id: "matic-network", symbol: "POL", name: "Polygon", image: priceMap["MATIC"]?.image ?? priceMap["POL"]?.image ?? "", price: priceMap["MATIC"]?.price ?? priceMap["POL"]?.price ?? 0, change24h: priceMap["MATIC"]?.change ?? priceMap["POL"]?.change ?? 0, balance: balances.matic ?? 0, balanceUsd: (balances.matic ?? 0) * (priceMap["MATIC"]?.price ?? priceMap["POL"]?.price ?? 0), chain: "polygon" },
-    { id: "bitcoin", symbol: "BTC", name: "Bitcoin", image: priceMap["BTC"]?.image ?? "", price: priceMap["BTC"]?.price ?? 0, change24h: priceMap["BTC"]?.change ?? 0, balance: 0, balanceUsd: 0, chain: "bitcoin" },
-    { id: "arbitrum", symbol: "ARB", name: "Arbitrum", image: priceMap["ARB"]?.image ?? "", price: priceMap["ARB"]?.price ?? 0, change24h: priceMap["ARB"]?.change ?? 0, balance: 0, balanceUsd: 0, chain: "arbitrum" },
-    { id: "optimism", symbol: "OP", name: "Optimism", image: priceMap["OP"]?.image ?? "", price: priceMap["OP"]?.price ?? 0, change24h: priceMap["OP"]?.change ?? 0, balance: 0, balanceUsd: 0, chain: "optimism" },
+    { id: "ethereum",     symbol: "ETH",  name: "Ethereum",  image: priceMap["ETH"]?.image  ?? "", price: priceMap["ETH"]?.price  ?? 0, change24h: priceMap["ETH"]?.change  ?? 0, balance: balances.eth  ?? 0, balanceUsd: (balances.eth  ?? 0) * (priceMap["ETH"]?.price  ?? 0), chain: "ethereum", marketCap: priceMap["ETH"]?.marketCap,  volume24h: priceMap["ETH"]?.volume24h  },
+    { id: "solana",       symbol: "SOL",  name: "Solana",    image: priceMap["SOL"]?.image  ?? "", price: priceMap["SOL"]?.price  ?? 0, change24h: priceMap["SOL"]?.change  ?? 0, balance: balances.sol  ?? 0, balanceUsd: (balances.sol  ?? 0) * (priceMap["SOL"]?.price  ?? 0), chain: "solana",   marketCap: priceMap["SOL"]?.marketCap,  volume24h: priceMap["SOL"]?.volume24h  },
+    { id: "binancecoin",  symbol: "BNB",  name: "BNB Chain", image: priceMap["BNB"]?.image  ?? "", price: priceMap["BNB"]?.price  ?? 0, change24h: priceMap["BNB"]?.change  ?? 0, balance: balances.bnb  ?? 0, balanceUsd: (balances.bnb  ?? 0) * (priceMap["BNB"]?.price  ?? 0), chain: "bsc",      marketCap: priceMap["BNB"]?.marketCap,  volume24h: priceMap["BNB"]?.volume24h  },
+    { id: "matic-network",symbol: "POL",  name: "Polygon",   image: priceMap["MATIC"]?.image ?? priceMap["POL"]?.image ?? "", price: priceMap["MATIC"]?.price ?? priceMap["POL"]?.price ?? 0, change24h: priceMap["MATIC"]?.change ?? priceMap["POL"]?.change ?? 0, balance: balances.matic ?? 0, balanceUsd: (balances.matic ?? 0) * (priceMap["MATIC"]?.price ?? priceMap["POL"]?.price ?? 0), chain: "polygon", marketCap: priceMap["MATIC"]?.marketCap, volume24h: priceMap["MATIC"]?.volume24h },
+    { id: "bitcoin",      symbol: "BTC",  name: "Bitcoin",   image: priceMap["BTC"]?.image  ?? "", price: priceMap["BTC"]?.price  ?? 0, change24h: priceMap["BTC"]?.change  ?? 0, balance: 0, balanceUsd: 0, chain: "bitcoin",   marketCap: priceMap["BTC"]?.marketCap,  volume24h: priceMap["BTC"]?.volume24h  },
+    { id: "arbitrum",     symbol: "ARB",  name: "Arbitrum",  image: priceMap["ARB"]?.image  ?? "", price: priceMap["ARB"]?.price  ?? 0, change24h: priceMap["ARB"]?.change  ?? 0, balance: 0, balanceUsd: 0, chain: "arbitrum",  marketCap: priceMap["ARB"]?.marketCap,  volume24h: priceMap["ARB"]?.volume24h  },
+    { id: "optimism",     symbol: "OP",   name: "Optimism",  image: priceMap["OP"]?.image   ?? "", price: priceMap["OP"]?.price   ?? 0, change24h: priceMap["OP"]?.change   ?? 0, balance: 0, balanceUsd: 0, chain: "optimism",  marketCap: priceMap["OP"]?.marketCap,   volume24h: priceMap["OP"]?.volume24h   },
   ];
 
   const totalUsd = tokens.reduce((sum, t) => sum + t.balanceUsd, 0);
@@ -107,11 +129,31 @@ export default function Dashboard() {
   const handleCopy = () => {
     if (activeWallet?.evmAddress) {
       navigator.clipboard.writeText(activeWallet.evmAddress);
-      toast({ title: "Copied", description: "Address copied to clipboard" });
+      toast({ title: "Copied", description: "EVM address copied to clipboard" });
+    }
+  };
+
+  const handleCopySol = () => {
+    if (activeWallet?.solAddress) {
+      navigator.clipboard.writeText(activeWallet.solAddress);
+      toast({ title: "Copied", description: "Solana address copied" });
     }
   };
 
   const isLoading = pricesLoading || balances.eth === null;
+
+  const openCoinDetail = (token: TokenRow) => {
+    setSelectedCoin({
+      id: token.id,
+      name: token.name,
+      symbol: token.symbol,
+      image: token.image,
+      price: token.price,
+      change24h: token.change24h,
+      marketCap: token.marketCap,
+      volume24h: token.volume24h,
+    });
+  };
 
   return (
     <div className={`flex-1 flex flex-col ${isDesktop ? "min-h-screen" : "h-[100dvh]"} relative`}>
@@ -142,13 +184,14 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="flex items-center justify-between w-full bg-black/40 rounded-xl p-3 border border-border/50 mb-3">
+            {/* EVM Address */}
+            <div className="flex items-center justify-between w-full bg-black/40 rounded-xl p-3 border border-border/50 mb-2">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">
                   {activeWallet?.name?.charAt(0)?.toUpperCase() ?? "W"}
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground">{activeWallet?.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{activeWallet?.name} · EVM</p>
                   <p className="font-mono text-sm">{shortEvmAddr}</p>
                 </div>
               </div>
@@ -157,7 +200,25 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Multi-wallet quick switch (desktop only, when multiple wallets) */}
+            {/* SOL Address */}
+            {activeWallet?.solAddress && (
+              <div className="flex items-center justify-between w-full bg-black/40 rounded-xl p-3 border border-border/50 mb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-5 h-5 rounded-full bg-[#14F195]/20 flex items-center justify-center shrink-0">
+                    <span className="text-[8px] font-bold text-[#14F195]">S</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted-foreground">{activeWallet?.name} · Solana</p>
+                    <p className="font-mono text-sm truncate max-w-[180px]">{activeWallet.solAddress.slice(0,6)}...{activeWallet.solAddress.slice(-4)}</p>
+                  </div>
+                </div>
+                <button onClick={handleCopySol} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors shrink-0">
+                  <Copy className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            )}
+
+            {/* Multi-wallet quick switch */}
             {wallets.length > 1 && (
               <div className="flex gap-2 flex-wrap">
                 {wallets.slice(0, 4).map(w => (
@@ -186,8 +247,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-3 mb-8">
           {[
             { label: "Receive", icon: ArrowDownLeft, href: "/receive" },
-            { label: "Send", icon: ArrowUpRight, href: "/send" },
-            { label: "Swap", icon: RefreshCw, href: "/swap" },
+            { label: "Send",    icon: ArrowUpRight,  href: "/send" },
+            { label: "Swap",    icon: RefreshCw,     href: "/swap" },
           ].map(({ label, icon: Icon, href }) => (
             <Button key={label} variant="outline" onClick={() => setLocation(href)} className="h-auto py-3 flex flex-col gap-2 rounded-2xl bg-card border-border hover:bg-card/80 hover:text-primary hover:border-primary/50">
               <Icon className="w-5 h-5" />
@@ -216,7 +277,11 @@ export default function Dashboard() {
               ))
             ) : (
               tokens.map(token => (
-                <div key={token.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-card/50 transition-colors border border-transparent hover:border-border cursor-pointer">
+                <button
+                  key={token.id}
+                  onClick={() => openCoinDetail(token)}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-card/50 transition-colors border border-transparent hover:border-border cursor-pointer"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-black/40 border border-border flex items-center justify-center overflow-hidden">
                       {token.image
@@ -224,7 +289,7 @@ export default function Dashboard() {
                         : <span className="text-xs font-bold">{token.symbol[0]}</span>
                       }
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col text-left">
                       <span className="font-semibold text-sm">{token.name}</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-xs text-muted-foreground">${token.price < 1 ? token.price.toPrecision(4) : token.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -234,39 +299,27 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="font-bold text-sm">
-                      {hideBalance ? "••••" : token.balance > 0 ? token.balance.toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—"}
-                    </span>
-                    <span className="text-xs text-muted-foreground mt-0.5">
-                      {hideBalance ? "••••" : token.balanceUsd > 0 ? `$${token.balanceUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ""}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-sm">
+                        {hideBalance ? "••••" : token.balance > 0 ? token.balance.toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-0.5">
+                        {hideBalance ? "••••" : token.balanceUsd > 0 ? `$${token.balanceUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ""}
+                      </span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                   </div>
-                </div>
+                </button>
               ))
             )}
           </div>
         </div>
-
-        {/* SOL Address */}
-        {activeWallet?.solAddress && (
-          <div className="mt-6 p-4 bg-card/50 border border-border/50 rounded-2xl">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-2">Solana Address</p>
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs text-muted-foreground truncate max-w-[200px]">
-                {activeWallet.solAddress}
-              </span>
-              <button
-                onClick={() => { navigator.clipboard.writeText(activeWallet.solAddress); toast({ title: "Copied", description: "SOL address copied" }); }}
-                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors ml-2"
-              >
-                <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
       <BottomNav />
+
+      <CoinDetailDialog coin={selectedCoin} onClose={() => setSelectedCoin(null)} />
     </div>
   );
 }
