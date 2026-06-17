@@ -87,13 +87,25 @@ function LoginForm() {
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedWallet || !password) return;
+    if (!password) return;
+    if (wallets.length === 0) {
+      toast({
+        title: "No wallet on this device",
+        description: "Your wallet data isn't saved here. Use the Import tab to restore with your seed phrase.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!selectedWallet) {
+      toast({ title: "Select a wallet", description: "Please select a wallet from the list above.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       await connectWallet(selectedWallet.name, password);
       setLocation("/dashboard");
     } catch {
-      toast({ title: "Access Denied", description: "Wrong password. Please try again.", variant: "destructive" });
+      toast({ title: "Wrong Password", description: "Incorrect password. Please try again.", variant: "destructive" });
     } finally {
       setLoading(false);
     }

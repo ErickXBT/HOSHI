@@ -7,6 +7,12 @@ import { useIsDesktop } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { CoinDetailDialog, type CoinDialogData } from "@/components/CoinDetailDialog";
 
+const MARKET_CHAIN: Record<string, string> = {
+  bitcoin: "btc", ethereum: "eth", solana: "sol",
+  binancecoin: "bnb", "matic-network": "polygon",
+  arbitrum: "arb", optimism: "op",
+};
+
 function toCoinDialogData(coin: CoinPrice | TrendingCoin): CoinDialogData {
   if ("current_price" in coin) {
     return {
@@ -18,6 +24,7 @@ function toCoinDialogData(coin: CoinPrice | TrendingCoin): CoinDialogData {
       change24h: coin.price_change_percentage_24h ?? 0,
       marketCap: coin.market_cap,
       volume24h: coin.total_volume,
+      chain: MARKET_CHAIN[coin.id] ?? "",
     };
   }
   return {
@@ -27,6 +34,7 @@ function toCoinDialogData(coin: CoinPrice | TrendingCoin): CoinDialogData {
     image: coin.thumb,
     price: coin.price,
     change24h: coin.change24h,
+    chain: MARKET_CHAIN[coin.id] ?? "",
   };
 }
 

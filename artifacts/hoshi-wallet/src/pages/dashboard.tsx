@@ -142,6 +142,16 @@ export default function Dashboard() {
 
   const isLoading = pricesLoading || balances.eth === null;
 
+  const CHAIN_KEY: Record<string, string> = {
+    ethereum: "eth",
+    solana: "sol",
+    binancecoin: "bnb",
+    "matic-network": "polygon",
+    arbitrum: "arb",
+    optimism: "op",
+    bitcoin: "btc",
+  };
+
   const openCoinDetail = (token: TokenRow) => {
     setSelectedCoin({
       id: token.id,
@@ -152,6 +162,9 @@ export default function Dashboard() {
       change24h: token.change24h,
       marketCap: token.marketCap,
       volume24h: token.volume24h,
+      chain: CHAIN_KEY[token.id] ?? "",
+      walletEvmAddress: activeWallet?.evmAddress,
+      walletSolAddress: activeWallet?.solAddress,
     });
   };
 
